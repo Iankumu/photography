@@ -37,35 +37,66 @@ class RegisterForm(Form):
     ])
     confirm = PasswordField('Confirm Password')
 
-    @app.route('/register', methods=['GET', 'POST'])
-    def register():
-        form = RegisterForm(request.form)
-        if request.method == 'POST' and form.validate():
-            name = form.name.data
-            email = form.email.data
-            username = form.username.data
-            # encrypting password
-            password = sha256_crypt.encrypt(str(form.username.data))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegisterForm(request.form)
+    if request.method == 'POST' and form.validate():
+        name = form.name.data
+        email = form.email.data
+        username = form.username.data
+        # encrypting password
+        password = sha256_crypt.encrypt(str(form.username.data))
+
+        # Creating Cursor
+
+        cur = mysql.connection.cursor()
+        # Execute Query
+        cur.execute("INSERT INTO users(FullName, UserName, Email, Password) VALUES (%s, %s, %s, %s)",
+                    (name, username, email, password))
+
+        # Commit to DB
+        mysql.connection.commit()
+
+        # Close Connection
+        cur.close()
+
+        flash('You Are Registered Successfully and you can now log in', 'success')
+
+        return redirect(url_for('login'))
+    return render_template('register.html', form=form)
+
+    # User Login
 
 
-            # Creating Cursor
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    if request.method == 'POST':
 
-            cur = mysql.connection.cursor()
-            # Execute Query
-            cur.execute(
-                "INSERT INTO users(FullName, UserName, Email, Password) VALUES (%s, %s, %s, %s)",
-                (name, username, email, password))
+        # Getting form fields
+        email = request.form['email']
+        password_got = request.form['password']
 
-            #Commit to DB
-            mysql.connection.commit()
+        # Create Cursor
+        cur = mysql.connection.cursor()
 
-            #Close Connection
-            cur.close()
+        # Get Username and Password
+        result = cur.execute("SELECT * FROM users WHERE Email = %s", [email])
 
-            flash('You Are Registered Successfully and you can now log in', 'success')
+        if result > 0:
+            # Get stored hash password
+            data = cur.fetchone()
+            password = data['Password']
 
-            return redirect(url_for('login'))
-        return render_template('register.html', form=form)
+            # Compare Passwords
+            if sha256_crypt.verify(password_got, password):
+                app.logger.info('PASSWORD MATCHED')
+            else:
+                app.logger.info('PASSWORD NOT MATCHED')
+
+        else:
+            app.logger.info('NO USER')
+    return render_template('login.html')
 
 
 if __name__ == '__main__':
