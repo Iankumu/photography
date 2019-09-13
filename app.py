@@ -1,7 +1,7 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, logging, request
 from flask_mysqldb import MySQL
 from passlib.hash import sha256_crypt
-from wtforms import Form, TextAreaField, PasswordField, validators, StringField
+from wtforms import Form, PasswordField, validators, StringField
 
 app = Flask(__name__)
 
@@ -46,7 +46,7 @@ def register():
         email = form.email.data
         username = form.username.data
         # encrypting password
-        password = sha256_crypt.encrypt(str(form.username.data))
+        password = sha256_crypt.hash(form.password.data)
 
         # Creating Cursor
 
