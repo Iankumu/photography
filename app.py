@@ -1,7 +1,8 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, logging, request
 from flask_mysqldb import MySQL
-from passlib.hash import sha256_crypt
-from wtforms import Form, PasswordField, validators, StringField
+from wtforms import Form, PasswordField, validators, StringField, BooleanField
+from wtforms.validators import Email, Length, InputRequired
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -27,15 +28,27 @@ def about():
     return render_template('about.html')
 
 
+# Registration Form Class
+
+
 class RegisterForm(Form):
     name = StringField('FullName', [validators.length(min=1, max=50)])
     username = StringField('UserName', [validators.length(min=4, max=25)])
     email = StringField('Email', [validators.length(min=6, max=50)])
     password = PasswordField('Password', [
         validators.DataRequired(),
-        validators.EqualTo('confirm', message='Password does not match')
+        validators.EqualTo('confirm', message='Password does not match'),
+        validators.length(min=8, max=50)
+
     ])
     confirm = PasswordField('Confirm Password')
+#Login Form
+class LoginForm(Form):
+    emailLogin = StringField('Email', [validators.length(min=6, max=50)], validators=[InputRequired()])
+    passwordLogin = PasswordField(validators.length(min=8, max=50), validators=[InputRequired()])
+    remember = BooleanField('Remember Me')
+
+# Registration
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -46,14 +59,14 @@ def register():
         email = form.email.data
         username = form.username.data
         # encrypting password
-        password = sha256_crypt.hash(form.password.data)
+        hashed_password = generate_password_hash(form.password.data , method='sha256')
 
         # Creating Cursor
 
         cur = mysql.connection.cursor()
         # Execute Query
         cur.execute("INSERT INTO users(FullName, UserName, Email, Password) VALUES (%s, %s, %s, %s)",
-                    (name, username, email, password))
+                    (name, username, email, hashed_password))
 
         # Commit to DB
         mysql.connection.commit()
@@ -66,7 +79,8 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
-    # User Login
+
+# User Login
 
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -89,14 +103,35 @@ def login():
             password = data['Password']
 
             # Compare Passwords
-            if sha256_crypt.verify(password_got, password):
-                app.logger.info('PASSWORD MATCHED')
+            if check_password_hash(password, password_got):
+                # Password matched
+                session['Logged_in'] = True
+                session['Email'] = email
+
+                flash('You Are now logged in', 'success')
+                return redirect(url_for('dashboard'))
             else:
-                app.logger.info('PASSWORD NOT MATCHED')
+                error = 'Invalid Login'
+            return render_template('login.html', error=error)
+            # Close Connection
 
         else:
-            app.logger.info('NO USER')
+            error = 'User Not Found'
+            return render_template('login.html', error=error)
     return render_template('login.html')
+
+
+# Dashboard
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+
+
+@app.route('/logout')
+def logout():
+    session.clear
+    flash('You are now Logged Out', 'success')
+    return redirect(url_for('login'))
 
 
 if __name__ == '__main__':

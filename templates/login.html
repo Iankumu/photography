@@ -1,7 +1,6 @@
 {% extends 'layout.html' %}
 {% block body %}
 <h1>Login</h1>
-{% include 'includes/_messages.html' %}
 <form method="POST" action="">
    <div class="form-group">
        <label>Email</label>
@@ -11,6 +10,14 @@
        <label>Password</label>
        <input type="password" name="password" class="form-control" value={{request.form.password}}>
    </div>
+    <div class="form-group">
+        <input type="checkbox"  value="Remember Me">
+        <label>Remember me</label>
+   </div>
+    <div class="form-group">
+       <p><a href="/register">Already have an account?Sign up</a></p>
+   </div>
+
 <p><input type="submit" class="btn btn-primary" value="Login" ></p>
 </form>
 {% endblock %}
