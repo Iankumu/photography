@@ -1,7 +1,18 @@
 {% extends 'layout.html' %}
 {% block body %}
+<head>
+<style>
+    body{
+    background-image:url({{ url_for('static', filename='home.jpg')}});
+    background-size:cover;
+    background-attachment:fixed;
+    background-repeat: no-repeat, repeat;
+
+</style>
+</head>
 <div class="jumbotron text-center">
     <h1>Welcome to our Platform</h1>
     <p><ipsum>Lorem</ipsum></Lor></p>
 </div>
+</body>
 {% endblock %}

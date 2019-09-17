@@ -3,6 +3,8 @@ from flask_mysqldb import MySQL
 from wtforms import Form, PasswordField, validators, StringField, BooleanField
 from wtforms.validators import Email, Length, InputRequired
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_mail import Mail, Message
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -14,8 +16,13 @@ app.config['MYSQL_DB'] = 'photography'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 # initialize MYSQL
-
 mysql = MySQL(app)
+
+# config Mail
+
+
+# initialize mail SMTP
+mail = Mail(app)
 
 
 @app.route('/')
@@ -42,11 +49,14 @@ class RegisterForm(Form):
 
     ])
     confirm = PasswordField('Confirm Password')
-#Login Form
+
+
+# Login Form
 class LoginForm(Form):
     emailLogin = StringField('Email', [validators.length(min=6, max=50)], validators=[InputRequired()])
     passwordLogin = PasswordField(validators.length(min=8, max=50), validators=[InputRequired()])
     remember = BooleanField('Remember Me')
+
 
 # Registration
 
@@ -59,7 +69,7 @@ def register():
         email = form.email.data
         username = form.username.data
         # encrypting password
-        hashed_password = generate_password_hash(form.password.data , method='sha256')
+        hashed_password = generate_password_hash(form.password.data, method='sha256')
 
         # Creating Cursor
 
@@ -93,6 +103,7 @@ def login():
 
         # Create Cursor
         cur = mysql.connection.cursor()
+        # username = cur.execute("SELECT FullName FROM users WHERE Email = %s", [email])
 
         # Get Username and Password
         result = cur.execute("SELECT * FROM users WHERE Email = %s", [email])
@@ -121,17 +132,35 @@ def login():
     return render_template('login.html')
 
 
+# Check if user is logged in
+def is_logged_in(verify):
+    @wraps(verify)
+    def wrap(*args, **kwargs):
+        if 'Logged_in' in session:
+            return verify(*args, **kwargs)
+        else:
+            flash('Unauthorized, Please Login', 'danger')
+            return redirect(url_for('login'))
+
+    return wrap
+
+
 # Dashboard
 @app.route('/dashboard')
+@is_logged_in
 def dashboard():
     return render_template('dashboard.html')
 
 
+# Logout
 @app.route('/logout')
 def logout():
-    session.clear
+    session.clear()
     flash('You are now Logged Out', 'success')
-    return redirect(url_for('login'))
+    return redirect(url_for('home'))
+
+
+# Server Startup
 
 
 if __name__ == '__main__':

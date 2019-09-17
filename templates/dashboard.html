@@ -1,6 +1,29 @@
 {% extends 'layout.html' %}
 {% block body %}
-<h1>Dashboard</h1>
-<h2><p><small>Welcome {{session.Email }}</small></p></h2>
+<h1 class="dash">Dashboard</h1>
+<h2 class="home"><p><small>Welcome {{session.Email }}</small></p></h2>
+<html>
+<head>
+<style>
+    body{
+    background-image:url({{ url_for('static', filename='Dashboard.jpg')}});
+    background-size:cover;
+    background-attachment:fixed;
+    background-repeat: no-repeat, repeat;
+    }
+    .dash
+    {
+    color:white;
+    }
+    .home
+    {
+    color:white;
+    }
+</style>
+</head>
+<body>
+
+</body>
+</html>
 
 {% endblock %}
