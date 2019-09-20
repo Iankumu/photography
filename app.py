@@ -4,7 +4,7 @@ from wtforms import Form, PasswordField, validators, StringField, BooleanField, 
 from wtforms.validators import Email, Length, InputRequired
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-from flask_mail import Mail, Message
+from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__)
@@ -20,10 +20,9 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 mysql = MySQL(app)
 
 # config image format
-app.config['ALLOWED_IMAGE_EXTENSIONS'] = ["PNG", "JPG", "JPEG"]
-
-# initialize mail SMTP
-mail = Mail(app)
+UPLOAD_FOLDER = '/root/PycharmProjects/photography/static'
+Allowed_Extensions = app.config['ALLOWED_IMAGE_EXTENSIONS'] = ['PNG', 'JPG', 'JPEG']
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 @app.route('/')
@@ -162,14 +161,31 @@ def logout():
 
 
 # uploading files
+global filename
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in Allowed_Extensions
+
+
 @app.route('/uploads', methods=['POST', 'GET'])
 def upload():
+    global filename
     if request.method == "POST":
 
-        if request.files:
-            image = request.files["image"]
-            print(image)
+        if 'image' not in request.files:
+            flash('No file part')
             return redirect(request.url)
+        file = request.files['image']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return redirect(url_for('uploaded_file', filename=filename))
     return render_template('uploads.html')
 
 
