@@ -1,24 +1,25 @@
 {% extends 'layout.html' %}
 {% block body %}
 
-<h1 class="dash">uploads</h1>
+<h1 class="dash">Uploads</h1>
 
 <head>
     <meta charset="UTF-8">
-    <title>uploads</title>
+    <title>Uploads</title>
 </head>
 <body>
 <div class="jumbotron text-center">
     <div class="row">
         <div class="col">
             <h1>Upload image </h1>
-            <form action="/uploads" method="post" enctype="multipart/form-data">
-               <div class="input-group mb-3">
+
+<form action="/uploads" method="post" enctype="multipart/form-data">
+<div class="input-group mb-3">
   <div class="input-group-prepend">
 
   </div>
   <div class="custom-file">
-    <input type="file" class="custom-file-input" id="inputGroupFile01" aria-describedby="inputGroupFileAddon01" name="image">
+    <input type="file" class="custom-file-input" id="inputGroupFile01" aria-describedby="inputGroupFileAddon01" name="image" accept=".png,.jpeg,.jpg">
     <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
   </div>
 </div>
