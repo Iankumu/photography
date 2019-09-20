@@ -1,15 +1,16 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, logging, request
 from flask_mysqldb import MySQL
-from wtforms import Form, PasswordField, validators, StringField, BooleanField
+from wtforms import Form, PasswordField, validators, StringField, BooleanField, SubmitField, FileField
 from wtforms.validators import Email, Length, InputRequired
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_mail import Mail, Message
 from functools import wraps
+from flask_mail import Mail, Message
+import os
 
 app = Flask(__name__)
 
 # config MYSQL
-app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'photography'
@@ -18,8 +19,8 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 # initialize MYSQL
 mysql = MySQL(app)
 
-# config Mail
-
+# config image format
+app.config['ALLOWED_IMAGE_EXTENSIONS'] = ["PNG", "JPG", "JPEG"]
 
 # initialize mail SMTP
 mail = Mail(app)
@@ -119,7 +120,7 @@ def login():
                 session['Logged_in'] = True
                 session['Email'] = email
 
-                flash('You Are now logged in', 'success')
+                flash('Login Successful', 'success')
                 return redirect(url_for('dashboard'))
             else:
                 error = 'Invalid Login'
@@ -158,6 +159,18 @@ def logout():
     session.clear()
     flash('You are now Logged Out', 'success')
     return redirect(url_for('home'))
+
+
+# uploading files
+@app.route('/uploads', methods=['POST', 'GET'])
+def upload():
+    if request.method == "POST":
+
+        if request.files:
+            image = request.files["image"]
+            print(image)
+            return redirect(request.url)
+    return render_template('uploads.html')
 
 
 # Server Startup
