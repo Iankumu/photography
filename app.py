@@ -1,3 +1,4 @@
+import cur as cur
 from flask import Flask, render_template, flash, redirect, url_for, session, logging, request
 from flask_mysqldb import MySQL
 from wtforms import Form, PasswordField, validators, StringField, BooleanField, SubmitField, FileField
@@ -103,7 +104,6 @@ def login():
 
         # Create Cursor
         cur = mysql.connection.cursor()
-        # username = cur.execute("SELECT FullName FROM users WHERE Email = %s", [email])
 
         # Get Username and Password
         result = cur.execute("SELECT * FROM users WHERE Email = %s", [email])
@@ -177,17 +177,20 @@ def upload():
         if 'image' not in request.files:
             flash('No file part')
             return redirect(request.url)
-        file = request.files['image']
+        file = request.files['image'].filename
         if file.filename == '':
             flash('No selected file')
             return redirect(request.url)
 
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
+            filename = secure_filename(file.read())
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         return redirect(url_for('uploaded_file', filename=filename))
     return render_template('uploads.html')
 
+
+#cur = mysql.connection.cursor()
+#cur.execute('INSERT INTO PHOTOGRAPHY VALUES')
 
 # Server Startup
 
