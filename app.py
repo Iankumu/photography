@@ -1,5 +1,5 @@
 import cur as cur
-from flask import Flask, render_template, flash, redirect, url_for, session, logging, request
+from flask import Flask, render_template, flash, redirect, url_for, session, logging, request, send_from_directory
 from flask_mysqldb import MySQL
 from wtforms import Form, PasswordField, validators, StringField, BooleanField, SubmitField, FileField
 from wtforms.validators import Email, Length, InputRequired
@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from werkzeug.utils import secure_filename
 import os
-
+UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/uploads'
 app = Flask(__name__)
 
 # config MYSQL
@@ -21,9 +21,8 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 mysql = MySQL(app)
 
 # config image format
-UPLOAD_FOLDER = '/root/PycharmProjects/photography/static'
-Allowed_Extensions = app.config['ALLOWED_IMAGE_EXTENSIONS'] = ['PNG', 'JPG', 'JPEG']
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
 
 @app.route('/')
@@ -161,36 +160,35 @@ def logout():
 
 
 # uploading files
-global filename
-
-
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in Allowed_Extensions
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route('/uploads', methods=['POST', 'GET'])
-def upload():
-    global filename
-    if request.method == "POST":
-
-        if 'image' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['image'].filename
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.read())
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return redirect(url_for('uploaded_file', filename=filename))
+@app.route('/uploads')
+def upload_form():
     return render_template('uploads.html')
 
 
-#cur = mysql.connection.cursor()
-#cur.execute('INSERT INTO PHOTOGRAPHY VALUES')
+@app.route('/uploads', methods=['POST'])
+def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected for uploading')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            flash('File successfully uploaded')
+            return redirect('/')
+        else:
+            flash('Allowed file types are png, jpg, jpeg')
+            return redirect(request.url)
 
 # Server Startup
 
