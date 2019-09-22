@@ -6,7 +6,9 @@ from wtforms.validators import Email, Length, InputRequired
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from werkzeug.utils import secure_filename
+
 import os
+
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/uploads'
 app = Flask(__name__)
 
@@ -24,6 +26,7 @@ mysql = MySQL(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
+# file table
 
 @app.route('/')
 def home():
@@ -41,7 +44,7 @@ def about():
 class RegisterForm(Form):
     name = StringField('FullName', [validators.length(min=1, max=50)])
     username = StringField('UserName', [validators.length(min=4, max=25)])
-    email = StringField('Email', [validators.length(min=6, max=50)])
+    email = StringField('Email', [validators.Length(min=6, max=50)], validators.Email)
     password = PasswordField('Password', [
         validators.DataRequired(),
         validators.EqualTo('confirm', message='Password does not match'),
@@ -104,9 +107,8 @@ def login():
         # Create Cursor
         cur = mysql.connection.cursor()
 
-        # Get Username and Password
+        # Get Email and Password
         result = cur.execute("SELECT * FROM users WHERE Email = %s", [email])
-
         if result > 0:
             # Get stored hash password
             data = cur.fetchone()
@@ -116,7 +118,7 @@ def login():
             if check_password_hash(password, password_got):
                 # Password matched
                 session['Logged_in'] = True
-                session['Email'] = email
+                session['name'] = data['FullName']
 
                 flash('Login Successful', 'success')
                 return redirect(url_for('dashboard'))
@@ -161,6 +163,8 @@ def logout():
 
 # uploading files
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -170,7 +174,7 @@ def upload_form():
     return render_template('uploads.html')
 
 
-@app.route('/uploads', methods=['POST'])
+@app.route('/uploads', methods=['POST', 'GET'])
 def upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
@@ -185,12 +189,12 @@ def upload_file():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             flash('File successfully uploaded')
-            return redirect('/')
+            return redirect('/dashboard')
         else:
             flash('Allowed file types are png, jpg, jpeg')
             return redirect(request.url)
 
-# Server Startup
+    # Server Startup
 
 
 if __name__ == '__main__':
