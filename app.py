@@ -1,4 +1,3 @@
-import cur as cur
 from flask import Flask, render_template, flash, redirect, url_for, session, logging, request, send_from_directory
 from flask_mysqldb import MySQL
 from wtforms import Form, PasswordField, validators, StringField, BooleanField, SubmitField, FileField
@@ -6,7 +5,6 @@ from wtforms.validators import Email, Length, InputRequired
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from werkzeug.utils import secure_filename
-
 import os
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/uploads'
@@ -26,6 +24,7 @@ mysql = MySQL(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
+
 # file table
 
 @app.route('/')
@@ -39,20 +38,18 @@ def about():
 
 
 # Registration Form Class
-
-
-class RegisterForm(Form):
+class RegistrationForm(Form):
     name = StringField('FullName', [validators.length(min=1, max=50)])
-    username = StringField('UserName', [validators.length(min=4, max=25)])
-    email = StringField('Email', [validators.Length(min=6, max=50)], validators.Email)
+    username = StringField('UserName', [validators.Length(min=4, max=25)])
+    email = StringField('Email', [validators.Length(min=6, max=35)])
     password = PasswordField('Password', [
         validators.DataRequired(),
-        validators.EqualTo('confirm', message='Password does not match'),
-        validators.length(min=8, max=50)
-
+        validators.EqualTo('confirm', message='Password does not match')
     ])
     confirm = PasswordField('Confirm Password')
 
+
+#  accept_tos = BooleanField('I accept the TOS', [validators.DataRequired()])
 
 # Login Form
 class LoginForm(Form):
@@ -66,8 +63,9 @@ class LoginForm(Form):
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    form = RegisterForm(request.form)
+    form = RegistrationForm(request.form)
     if request.method == 'POST' and form.validate():
+
         name = form.name.data
         email = form.email.data
         username = form.username.data
@@ -175,6 +173,7 @@ def upload_form():
 
 
 @app.route('/uploads', methods=['POST', 'GET'])
+@is_logged_in
 def upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
@@ -187,11 +186,11 @@ def upload_file():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename, session['name']))
             flash('File successfully uploaded')
             return redirect('/dashboard')
         else:
-            flash('Allowed file types are png, jpg, jpeg')
+            flash('Allowed file types are .png, .jpg, .jpeg')
             return redirect(request.url)
 
     # Server Startup
