@@ -1,15 +1,16 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, logging, request, send_from_directory
-from flask_mysqldb import MySQL
-from wtforms import Form, PasswordField, validators, StringField, BooleanField, SubmitField, FileField
-from wtforms.validators import Email, Length, InputRequired
-from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
-from werkzeug.utils import secure_filename
+import base64
 import os
+from functools import wraps
+from flask import Flask, render_template, flash, redirect, url_for, session, request
+from flask_mysqldb import MySQL
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from wtforms import Form, PasswordField, validators, StringField, BooleanField
+from wtforms.validators import InputRequired
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/uploads'
 app = Flask(__name__)
-
 # config MYSQL
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'root'
@@ -20,12 +21,12 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 # initialize MYSQL
 mysql = MySQL(app)
 
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:''@127.0.0.1/photography'
+# db = SQLAlchemy(app)
 # config image format
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
-
-# file table
 
 @app.route('/')
 def home():
@@ -65,7 +66,6 @@ class LoginForm(Form):
 def register():
     form = RegistrationForm(request.form)
     if request.method == 'POST' and form.validate():
-
         name = form.name.data
         email = form.email.data
         username = form.username.data
@@ -117,7 +117,7 @@ def login():
                 # Password matched
                 session['Logged_in'] = True
                 session['name'] = data['FullName']
-
+                session['id'] = data['UserID']
                 flash('Login Successful', 'success')
                 return redirect(url_for('dashboard'))
             else:
@@ -160,13 +160,22 @@ def logout():
 
 
 # uploading files
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+app.config["ALLOWED_EXTENSIONS"] = ['PNG', 'JPG', 'JPEG']
 
 
+# checks if a file is of the allowed extension
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    if not "." in filename:
+        return False
+
+    ext = filename.rsplit('.', 1)[1]
+    if ext.upper() in app.config["ALLOWED_EXTENSIONS"]:
+        return True
+    else:
+        return False
 
 
+# renders the upload html page
 @app.route('/uploads')
 def upload_form():
     return render_template('uploads.html')
@@ -185,9 +194,19 @@ def upload_file():
             flash('No file selected for uploading')
             return redirect(request.url)
         if file and allowed_file(file.filename):
+            cookie = request.cookies
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename, session['name']))
-            flash('File successfully uploaded')
+
+            def upload():
+                cur = mysql.connection.cursor()
+                cur.execute("INSERT INTO Photos(photos) values (filename)")
+                cur.connection.commit()
+                cur.close()
+                return cur
+
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # newfile = fileContents(photo=file.filename, photographerid=session['name'])
+            flash('File uploaded successfully', 'success')
             return redirect('/dashboard')
         else:
             flash('Allowed file types are .png, .jpg, .jpeg')
