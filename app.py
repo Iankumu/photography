@@ -1,13 +1,13 @@
 import base64
 import os
 from functools import wraps
-from flask import Flask, render_template, flash, redirect, url_for, session, request
+from flask import Flask, render_template, flash, redirect, url_for, session, request, config
 from flask_mysqldb import MySQL
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField
 from wtforms.validators import InputRequired
+from mysql.connector import MySQLConnection, Error
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/uploads'
 app = Flask(__name__)
@@ -21,8 +21,6 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 # initialize MYSQL
 mysql = MySQL(app)
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:''@127.0.0.1/photography'
-# db = SQLAlchemy(app)
 # config image format
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
@@ -197,15 +195,30 @@ def upload_file():
             cookie = request.cookies
             filename = secure_filename(file.filename)
 
-            def upload():
-                cur = mysql.connection.cursor()
-                cur.execute("INSERT INTO Photos(photos) values (filename)")
-                cur.connection.commit()
-                cur.close()
-                return cur
+            def read_file(filename):
+                with open(filename, 'rb') as f:
+                    photo = f.read()
+                return photo
 
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            # newfile = fileContents(photo=file.filename, photographerid=session['name'])
+            def update_blob(filename):
+                # read file
+                data = read_file(filename)
+
+                # prepare update query and data
+                query = "INSERT INTO Photos(photos)Values(%s)"
+                args = (data)
+
+                try:
+                    cur = mysql.connection.cursor()
+                    cur.execute(query, args)
+                    cur.commit()
+                    cur.close()
+                except Error as e:
+                    print(e)
+
+            def main():
+                update_blob('/root/PycharmProjects/photography/static/img/home.jpg')
+            main()
             flash('File uploaded successfully', 'success')
             return redirect('/dashboard')
         else:
