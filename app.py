@@ -1,4 +1,3 @@
-import base64
 import os
 from functools import wraps
 from flask import Flask, render_template, flash, redirect, url_for, session, request, config
@@ -7,7 +6,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField
 from wtforms.validators import InputRequired
-from mysql.connector import MySQLConnection, Error
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/uploads'
 app = Flask(__name__)
@@ -15,7 +13,7 @@ app = Flask(__name__)
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = 'photography'
+app.config['MYSQL_DB'] = 'test'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 # initialize MYSQL
@@ -192,34 +190,19 @@ def upload_file():
             flash('No file selected for uploading')
             return redirect(request.url)
         if file and allowed_file(file.filename):
-            cookie = request.cookies
             filename = secure_filename(file.filename)
+            file.save(os.path.join('static/uploads/{}'.format(file.filename)))
 
-            def read_file(filename):
-                with open(filename, 'rb') as f:
-                    photo = f.read()
-                return photo
 
-            def update_blob(filename):
-                # read file
-                data = read_file(filename)
+            new_file = 'static/uploads/{}'.format(filename)
 
-                # prepare update query and data
-                query = "INSERT INTO Photos(photos)Values(%s)"
-                args = (data)
 
-                try:
-                    cur = mysql.connection.cursor()
-                    cur.execute(query, args)
-                    cur.commit()
-                    cur.close()
-                except Error as e:
-                    print(e)
-
-            def main():
-                update_blob('/root/PycharmProjects/photography/static/img/home.jpg')
-            main()
+            cur = mysql.connect.cursor()
+            cur.execute('INSERT INTO test (file_path) VALUES(%s)', new_file)
+            mysql.connect.commit()
+            cur.close()
             flash('File uploaded successfully', 'success')
+            #print(new_file)
             return redirect('/dashboard')
         else:
             flash('Allowed file types are .png, .jpg, .jpeg')
