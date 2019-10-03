@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = 'test'
+app.config['MYSQL_DB'] = 'photography'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 # initialize MYSQL
@@ -23,6 +23,8 @@ mysql = MySQL(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
+
+# APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 @app.route('/')
 def home():
@@ -82,7 +84,6 @@ def register():
         cur.close()
 
         flash('You Are Registered Successfully and you can now log in', 'success')
-
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
@@ -191,18 +192,20 @@ def upload_file():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join('static/uploads/{}'.format(file.filename)))
 
-
-            new_file = 'static/uploads/{}'.format(filename)
-
-
-            cur = mysql.connect.cursor()
-            cur.execute('INSERT INTO test (file_path) VALUES(%s)', new_file)
-            mysql.connect.commit()
-            cur.close()
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            new_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # cur = mysql.connect.cursor()
+            # success = cur.execute('INSERT INTO Photos (file_path) VALUES()', new_file)
+            # mysql.connect.commit()
+            # cur.close()
+            # if success:
+            #  flash('File is uploaded to the db', 'success')
+            # else:
+            #  flash('file upload is not successfull', 'danger')
             flash('File uploaded successfully', 'success')
-            #print(new_file)
+
+            print("The file is " + new_file)
             return redirect('/dashboard')
         else:
             flash('Allowed file types are .png, .jpg, .jpeg')
