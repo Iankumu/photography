@@ -6,9 +6,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField
 from wtforms.validators import InputRequired
+import sqlite3
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/uploads'
 app = Flask(__name__)
+
 # config MYSQL
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'root'
@@ -195,17 +197,21 @@ def upload_file():
 
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             new_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            # cur = mysql.connect.cursor()
-            # success = cur.execute('INSERT INTO Photos (file_path) VALUES()', new_file)
-            # mysql.connect.commit()
-            # cur.close()
-            # if success:
-            #  flash('File is uploaded to the db', 'success')
-            # else:
-            #  flash('file upload is not successfull', 'danger')
+            file_name = file.filename
+
+            cur = mysql.connect.cursor()
+            success = cur.execute("INSERT INTO Photos (file_path) VALUES(%s)", file_name)
+            mysql.connect.commit()
+            cur.close()
+
+            if success:
+              flash('File is uploaded to the db', 'success')
+            else:
+              flash('file upload is not successfull', 'danger')
             flash('File uploaded successfully', 'success')
 
-            print("The file is " + new_file)
+            print("The file path is " + new_file)
+            print("The file name is " + file_name)
             return redirect('/dashboard')
         else:
             flash('Allowed file types are .png, .jpg, .jpeg')
