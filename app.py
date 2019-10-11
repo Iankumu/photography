@@ -1,16 +1,18 @@
 import os
 from functools import wraps
-from flask import Flask, render_template, flash, redirect, url_for, session, request, config
+from flask import Flask, render_template, flash, redirect, url_for, session, request, config, send_from_directory
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField
-from wtforms.validators import InputRequired
-import sqlite3
+from wtforms.validators import InputRequired, ValidationError
 
-UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/uploads'
+
+UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
 app = Flask(__name__)
+app.secret_key = 'secret123'
 
+APPROOT = os.path.dirname((os.path.abspath(__file__)))
 # config MYSQL
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'root'
@@ -25,8 +27,6 @@ mysql = MySQL(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
-
-# APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 @app.route('/')
 def home():
@@ -50,13 +50,56 @@ class RegistrationForm(Form):
     confirm = PasswordField('Confirm Password')
 
 
-#  accept_tos = BooleanField('I accept the TOS', [validators.DataRequired()])
-
 # Login Form
 class LoginForm(Form):
     emailLogin = StringField('Email', [validators.length(min=6, max=50)], validators=[InputRequired()])
     passwordLogin = PasswordField(validators.length(min=8, max=50), validators=[InputRequired()])
     remember = BooleanField('Remember Me')
+
+
+# Update Form
+class UpdateForm(Form):
+    name = StringField('FullName', [validators.length(min=1, max=50)])
+    username = StringField('UserName', [validators.Length(min=4, max=25)])
+    email = StringField('Email', [validators.Length(min=6, max=35)])
+
+    @staticmethod
+    def validate_email(email):
+        cur = mysql.connect.cursor()
+        result = cur.execute('SELECT Email FROM users WHERE Email=%s', [email])
+
+        if UpdateForm.email != result['Email']:
+            raise ValidationError('That email is already taken')
+        mysql.connect.commit()
+        cur.close()
+
+    @staticmethod
+    def validate_Fullname(name):
+        cur = mysql.connect.cursor()
+        result = cur.execute('SELECT FullName FROM users WHERE FullName=%s', [name])
+
+        if UpdateForm.name != result['FullName']:
+            raise ValidationError('That FullName is already taken')
+        mysql.connect.commit()
+        cur.close()
+
+    @staticmethod
+    def validate_username(username):
+        cur = mysql.connect.cursor()
+        result = cur.execute('SELECT Username FROM users WHERE Username=%s', [username])
+
+        if UpdateForm.username != result['Username']:
+            raise ValidationError('That username is already taken')
+        mysql.connect.commit()
+        cur.close()
+
+
+class ForgotForm(Form):
+    email = StringField('Email', [validators.Length(min=6, max=35)])
+
+
+class PasswordResetForm(Form):
+    current_password = PasswordField('Current Password', [validators.data_required(), validators.Length(min=4, max=80)])
 
 
 # Registration
@@ -119,11 +162,11 @@ def login():
                 session['id'] = data['UserID']
                 flash('Login Successful', 'success')
                 return redirect(url_for('dashboard'))
+
             else:
                 error = 'Invalid Login'
             return render_template('login.html', error=error)
             # Close Connection
-
         else:
             error = 'User Not Found'
             return render_template('login.html', error=error)
@@ -199,28 +242,76 @@ def upload_file():
             new_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file_name = file.filename
 
-            cur = mysql.connect.cursor()
-            success = cur.execute("INSERT INTO Photos (file_path) VALUES(%s)", file_name)
-            mysql.connect.commit()
+            cur = mysql.connection.cursor()
+            success = cur.execute("INSERT INTO photos (photo)VALUES (%s)", [new_file])
+            mysql.connection.commit()
             cur.close()
-
             if success:
-              flash('File is uploaded to the db', 'success')
+                flash("Uploaded to db", "success")
             else:
-              flash('file upload is not successfull', 'danger')
+                flash("failed", "danger")
             flash('File uploaded successfully', 'success')
+            print(new_file)
+            print(file_name)
 
-            print("The file path is " + new_file)
-            print("The file name is " + file_name)
-            return redirect('/dashboard')
+            return render_template('dashboard.html', image_name=file_name)
+
         else:
             flash('Allowed file types are .png, .jpg, .jpeg')
             return redirect(request.url)
 
-    # Server Startup
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
+'''
+
+
+@app.route('/forgot', methods=['GET', 'POST'])
+def forgot():
+    form = ForgotForm(request.form)
+    error = None
+    message = None
+    return render_template('forgot.html', form=form, error=error, message=message)
+
+
+'''
+
+
+@app.route('/profile', methods=['POST', 'GET'])
+def profile():
+    form = UpdateForm()
+    if request.method == 'POST' and form.validate():
+        username = form.username.data
+        Fullname = form.name.data
+        email = form.email.data
+
+        cur = mysql.connect.cursor()
+        cur.execute('SELECT * FROM users WHERE FullName=%s', [{{session.id}}])
+        data = cur.fetchone()
+
+        cur = mysql.connection.cursor()
+        cur.execute('UPDATE users SET Username =%s,Fullname = %s, Email =%s WHERE UserID =%s)',
+                    [username, Fullname, email, data['UserID']])
+        mysql.connection.commit()
+        cur.close()
+        flash('Your account has been updated!', 'success')
+        return redirect(url_for('profile'))
+    elif request.method == 'GET':
+
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM users WHERE FullName=%s", [{{session.id}}])
+        data = cur.fetchone()
+        form.username.data = data['Username']
+        form.name.data = data['FullName']
+        form.email.data = data['Email']
+    return render_template('profile.html', form=form)
+
+
+# Server Startup
 if __name__ == '__main__':
     # debug prevents the one from restarting each time you want to test it
-    app.secret_key = 'secret123'
+
     app.run(debug=True)
