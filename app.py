@@ -7,7 +7,6 @@ from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField
 from wtforms.validators import InputRequired, ValidationError
 
-
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
 app = Flask(__name__)
 app.secret_key = 'secret123'
@@ -62,36 +61,6 @@ class UpdateForm(Form):
     name = StringField('FullName', [validators.length(min=1, max=50)])
     username = StringField('UserName', [validators.Length(min=4, max=25)])
     email = StringField('Email', [validators.Length(min=6, max=35)])
-
-    @staticmethod
-    def validate_email(email):
-        cur = mysql.connect.cursor()
-        result = cur.execute('SELECT Email FROM users WHERE Email=%s', [email])
-
-        if UpdateForm.email != result['Email']:
-            raise ValidationError('That email is already taken')
-        mysql.connect.commit()
-        cur.close()
-
-    @staticmethod
-    def validate_Fullname(name):
-        cur = mysql.connect.cursor()
-        result = cur.execute('SELECT FullName FROM users WHERE FullName=%s', [name])
-
-        if UpdateForm.name != result['FullName']:
-            raise ValidationError('That FullName is already taken')
-        mysql.connect.commit()
-        cur.close()
-
-    @staticmethod
-    def validate_username(username):
-        cur = mysql.connect.cursor()
-        result = cur.execute('SELECT Username FROM users WHERE Username=%s', [username])
-
-        if UpdateForm.username != result['Username']:
-            raise ValidationError('That username is already taken')
-        mysql.connect.commit()
-        cur.close()
 
 
 class ForgotForm(Form):
@@ -239,22 +208,26 @@ def upload_file():
             filename = secure_filename(file.filename)
 
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            new_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file_name = file.filename
 
+            # inserting file path to the database
+            if login:
+                user = session['id']
             cur = mysql.connection.cursor()
-            success = cur.execute("INSERT INTO photos (photo)VALUES (%s)", [new_file])
+            cur.execute("INSERT INTO photos (photo,photographerid)VALUES (%s,%s)", [file_name, user])
             mysql.connection.commit()
             cur.close()
-            if success:
-                flash("Uploaded to db", "success")
-            else:
-                flash("failed", "danger")
-            flash('File uploaded successfully', 'success')
-            print(new_file)
-            print(file_name)
 
-            return render_template('dashboard.html', image_name=file_name)
+            # Fetching the image paths from mysql
+        if login:
+            user = session['id']
+            cur = mysql.connection.cursor()
+            images = cur.execute("SELECT photo from photos WHERE photographerid=%s", [user])
+            mysql.connection.commit()
+            cur.close()
+
+            return render_template('dashboard.html', image_name=images)
 
         else:
             flash('Allowed file types are .png, .jpg, .jpeg')
@@ -282,31 +255,33 @@ def forgot():
 
 @app.route('/profile', methods=['POST', 'GET'])
 def profile():
-    form = UpdateForm()
-    if request.method == 'POST' and form.validate():
+    form = UpdateForm(request.form)
+    if request.method == 'POST' or request.method == 'GET' and form.validate():
         username = form.username.data
         Fullname = form.name.data
         email = form.email.data
 
-        cur = mysql.connect.cursor()
-        cur.execute('SELECT * FROM users WHERE FullName=%s', [{{session.id}}])
-        data = cur.fetchone()
+        if request.method == 'GET':
+            if login:
+                user = session['id']
+                cur = mysql.connection.cursor()
+                result = cur.execute("SELECT * FROM users WHERE UserID=%s", [user])
+                if result > 0:
+                    data = cur.fetchone()
+                    form.username.data = data['UserName']
+                    form.name.data = data['FullName']
+                    form.email.data = data['Email']
 
-        cur = mysql.connection.cursor()
-        cur.execute('UPDATE users SET Username =%s,Fullname = %s, Email =%s WHERE UserID =%s)',
-                    [username, Fullname, email, data['UserID']])
-        mysql.connection.commit()
-        cur.close()
-        flash('Your account has been updated!', 'success')
+        elif request.method == 'POST':
+            if login:
+                user = session['id']
+                cur = mysql.connection.cursor()
+                cur.execute('UPDATE users SET UserName =%s,FullName = %s, Email =%s WHERE UserID =%s)',
+                            [username, Fullname, email, user])
+                mysql.connection.commit()
+                cur.close()
+                flash('Your account has been updated!', 'success')
         return redirect(url_for('profile'))
-    elif request.method == 'GET':
-
-        cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM users WHERE FullName=%s", [{{session.id}}])
-        data = cur.fetchone()
-        form.username.data = data['Username']
-        form.name.data = data['FullName']
-        form.email.data = data['Email']
     return render_template('profile.html', form=form)
 
 
