@@ -6,7 +6,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField
 from wtforms.validators import InputRequired
-from PIL import Image
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
 app = Flask(__name__)
@@ -151,7 +150,10 @@ def is_logged_in(verify):
         else:
             flash('Unauthorized, Please Login', 'danger')
             return redirect(url_for('login'))
+
     return wrap
+
+
 # Dashboard
 @app.route('/dashboard')
 @is_logged_in
@@ -160,10 +162,12 @@ def dashboard():
     if login:
         user = session['id']
         cur = mysql.connection.cursor()
-        images = cur.execute("SELECT photo FROM photos WHERE photographerid=%s", [user])
-        if images > 0:
-            data = cur.fetchmany(10)
-            print(data)
+        cur.execute("SELECT photo FROM photos WHERE photographerid=%s", [user])
+
+        result = cur.fetchone()
+        data = result['photo']
+        print(data)
+
         mysql.connection.commit()
         cur.close()
     return render_template('dashboard.html', image_names=data)
@@ -225,7 +229,6 @@ def upload_file():
                 cur.execute("INSERT INTO photos (photo,photographerid)VALUES (%s,%s)", [file_name, user])
                 mysql.connection.commit()
                 cur.close()
-
                 return redirect(url_for('dashboard'))
 
         else:
