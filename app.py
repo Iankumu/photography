@@ -1,17 +1,17 @@
 import os
 from functools import wraps
-from flask import Flask, render_template, flash, redirect, url_for, session, request, config, send_from_directory
+from flask import Flask, render_template, flash, redirect, url_for, session, request, send_from_directory
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField
-from wtforms.validators import InputRequired, ValidationError
+from wtforms.validators import InputRequired
+from PIL import Image
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
 app = Flask(__name__)
 app.secret_key = 'secret123'
 
-APPROOT = os.path.dirname((os.path.abspath(__file__)))
 # config MYSQL
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'root'
@@ -151,22 +151,29 @@ def is_logged_in(verify):
         else:
             flash('Unauthorized, Please Login', 'danger')
             return redirect(url_for('login'))
-
     return wrap
-
-
 # Dashboard
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
-    return render_template('dashboard.html')
+    # Fetching the image paths from mysql
+    if login:
+        user = session['id']
+        cur = mysql.connection.cursor()
+        images = cur.execute("SELECT photo FROM photos WHERE photographerid=%s", [user])
+        if images > 0:
+            data = cur.fetchmany(10)
+            print(data)
+        mysql.connection.commit()
+        cur.close()
+    return render_template('dashboard.html', image_names=data)
 
 
 # Logout
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('You are now Logged Out', 'success')
+    flash('You are now Logged out', 'success')
     return redirect(url_for('home'))
 
 
@@ -214,20 +221,12 @@ def upload_file():
             # inserting file path to the database
             if login:
                 user = session['id']
-            cur = mysql.connection.cursor()
-            cur.execute("INSERT INTO photos (photo,photographerid)VALUES (%s,%s)", [file_name, user])
-            mysql.connection.commit()
-            cur.close()
+                cur = mysql.connection.cursor()
+                cur.execute("INSERT INTO photos (photo,photographerid)VALUES (%s,%s)", [file_name, user])
+                mysql.connection.commit()
+                cur.close()
 
-            # Fetching the image paths from mysql
-        if login:
-            user = session['id']
-            cur = mysql.connection.cursor()
-            images = cur.execute("SELECT photo from photos WHERE photographerid=%s", [user])
-            mysql.connection.commit()
-            cur.close()
-
-            return render_template('dashboard.html', image_name=images)
+                return redirect(url_for('dashboard'))
 
         else:
             flash('Allowed file types are .png, .jpg, .jpeg')
@@ -288,5 +287,4 @@ def profile():
 # Server Startup
 if __name__ == '__main__':
     # debug prevents the one from restarting each time you want to test it
-
     app.run(debug=True)
