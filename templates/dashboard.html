@@ -30,9 +30,20 @@
           font-size: 3.5rem;
         }
       }
+      .jumbotron
+      {
+      items-align:center;
+      }
+
     </style>
 </head>
-{% for row in image_names %}
+{% if image_names==Null %}
+<div class="jumbotron">
+<h1>Welcome to your own portfolio</h1>
+<p>To start off Let's upload your first image</p>
+<a href="/uploads"><input class="btn btn-primary" type="submit" value="Upload Your First Image" name="upload"></a>
+</div>
+{% else %}
 <main>
 <main role="main">
   <div class="album py-5 bg-light">
@@ -56,5 +67,5 @@
   </div>
 </main>
 </main>
-{% endfor %}
+{% endif %}
 {% endblock %}

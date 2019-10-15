@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField
 from wtforms.validators import InputRequired
+from PIL import Image
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
 app = Flask(__name__)
@@ -162,15 +163,17 @@ def dashboard():
     if login:
         user = session['id']
         cur = mysql.connection.cursor()
-        cur.execute("SELECT photo FROM photos WHERE photographerid=%s", [user])
-
-        result = cur.fetchone()
-        data = result['photo']
-        print(data)
-
+        result = cur.execute("SELECT * FROM photos WHERE photographerid=%s", [user])
+        if result > 0:
+            rows = cur.fetchall()
+            for row in rows:
+                data = row['photo']
+                print(data)
+                return render_template('dashboard.html', image_names=data)
+        else:
+            return render_template('dashboard.html')
         mysql.connection.commit()
         cur.close()
-    return render_template('dashboard.html', image_names=data)
 
 
 # Logout
@@ -219,8 +222,9 @@ def upload_file():
             filename = secure_filename(file.filename)
 
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file_name = file.filename
+            flash("Image Uploaded Successfully", "success")
 
             # inserting file path to the database
             if login:
