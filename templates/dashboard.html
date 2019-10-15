@@ -44,6 +44,7 @@
 <a href="/uploads"><input class="btn btn-primary" type="submit" value="Upload Your First Image" name="upload"></a>
 </div>
 {% else %}
+{% for row in image_names %}
 <main>
 <main role="main">
   <div class="album py-5 bg-light">
@@ -67,5 +68,6 @@
   </div>
 </main>
 </main>
+{% endfor %}
 {% endif %}
 {% endblock %}

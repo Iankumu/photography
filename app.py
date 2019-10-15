@@ -6,7 +6,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField
 from wtforms.validators import InputRequired
-from PIL import Image
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
 app = Flask(__name__)
@@ -164,16 +163,17 @@ def dashboard():
         user = session['id']
         cur = mysql.connection.cursor()
         result = cur.execute("SELECT * FROM photos WHERE photographerid=%s", [user])
-        if result > 0:
-            rows = cur.fetchall()
-            for row in rows:
-                data = row['photo']
-                print(data)
-                return render_template('dashboard.html', image_names=data)
-        else:
-            return render_template('dashboard.html')
+
+        rows = cur.fetchall()
+        for row in rows:
+            data=(row['photo'])
+            print(data)
         mysql.connection.commit()
         cur.close()
+        if not result:
+            return render_template('dashboard.html')
+
+    return render_template('dashboard.html', image_names=data)
 
 
 # Logout
