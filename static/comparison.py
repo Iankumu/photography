@@ -13,9 +13,9 @@ new_image1 = new_image.resize((400, 400))
 size1 = new_image1.size
 img3 = np.shape(new_image1)
 img4 = np.array(new_image1)
-# img5 = img4.reshape(1, 1)
-# img6 = img5.flatten()
-print(img4)
+img5 = img4.reshape(-1, 1)
+img6 = img4.flatten()
+print(img5)
 # print(img5)
 
 for image in images:
@@ -25,12 +25,12 @@ for image in images:
         size = new.size
         img0 = np.shape(new)
         img1 = np.array(new)
-        # img2 = img1.reshape(1, 1)
+        img2 = img1.reshape(-1, 1)
         img7 = img1.flatten()
 
-        # print (img)
+        #print(img7)
         # print(new)
         # print(size)
         # print(img4)
-        # print(img1)
-# print(euclidean_distances(img6, img7))
+        # print(img7)
+print(euclidean_distances(img6, img6))
