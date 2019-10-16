@@ -166,7 +166,7 @@ def dashboard():
 
         rows = cur.fetchall()
         for row in rows:
-            data=(row['photo'])
+            data = (row['photo'])
             print(data)
         mysql.connection.commit()
         cur.close()
@@ -204,6 +204,17 @@ def allowed_file(filename):
 @app.route('/uploads')
 def upload_form():
     return render_template('uploads.html')
+
+
+@app.route('/edit/<int:photoid>', methods=['POST', 'GET'])
+@is_logged_in
+def edit(photoid):
+    new_id = upload_file.query.get(photoid)
+
+
+    # remove = os.remove(os.)
+
+    return redirect('dashboard')
 
 
 @app.route('/uploads', methods=['POST', 'GET'])
