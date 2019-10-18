@@ -45,7 +45,7 @@
 </div>
 {% else %}
 {% for row in image_names %}
-<main>
+<div class="main-div">
 <main role="main">
   <div class="album py-5 bg-light">
     <div class="container">
@@ -56,9 +56,9 @@
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center">
                 <div class="btn-group">
-                    <a href="/edit" ><input type="submit" class="btn btn-sm btn-outline-secondary"name="Edit"value="Edit image"></a>
+                    <a href="/edit"><input type="submit" class="btn btn-sm btn-outline-secondary"name="Edit"value="Edit image"></a>
                 </div>
-                <small class="text-muted">9 mins</small>
+                  <small class="text-muted"><h3>Posted on </h3>{{ date }}</small>
               </div>
             </div>
           </div>
@@ -67,7 +67,7 @@
     </div>
   </div>
 </main>
-</main>
+</div>
 {% endfor %}
 {% endif %}
 {% endblock %}

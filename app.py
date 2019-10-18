@@ -169,13 +169,14 @@ def dashboard():
         temp = []
         for row in rows:
             data = row['photo']
+            date = row['date_posted']
             temp.append(data)
         mysql.connection.commit()
         cur.close()
         if not result:
             return render_template('dashboard.html')
 
-    return render_template('dashboard.html', image_names=temp)
+    return render_template('dashboard.html', image_names=temp, date=date)
 
 
 # Logout
@@ -206,16 +207,6 @@ def allowed_file(filename):
 @app.route('/uploads')
 def upload_form():
     return render_template('uploads.html')
-
-
-@app.route('/edit/<int:photoid>', methods=['POST', 'GET'])
-@is_logged_in
-def edit(photoid):
-    new_id = upload_file.query.get(photoid)
-
-    # remove = os.remove(os.)
-
-    return redirect('dashboard')
 
 
 @app.route('/uploads', methods=['POST', 'GET'])
@@ -252,9 +243,28 @@ def upload_file():
             return redirect(request.url)
 
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+@app.route('/edit', methods=['POST', 'GET'])
+@is_logged_in
+def edit():
+    if login:
+        userid = session['id']
+        cur = mysql.connection.cursor()
+        cur.execute('SELECT * FROM photos')
+        id = cur.fetchall()
+
+        cursor = mysql.connection.cursor()
+        # cursor.execute('SELECT photo from photos WHERE photographerid = %s', [photoid])
+        print(id)
+        if edit:
+            #   result = cursor.execute('DELETE FROM photos WHERE photoid = %s', [photoid])
+
+            if id:
+                flash('SUCCESS', 'success')
+            else:
+                flash('FAILURE', 'danger')
+            # os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+    return redirect('dashboard')
 
 
 '''
@@ -278,18 +288,22 @@ def profile():
         username = form.username.data
         Fullname = form.name.data
         email = form.email.data
-
         if request.method == 'GET':
             if login:
                 user = session['id']
                 cur = mysql.connection.cursor()
-                result = cur.execute("SELECT * FROM users WHERE UserID=%s", [user])
-                if result > 0:
-                    data = cur.fetchone()
-                    form.username.data = data['UserName']
-                    form.name.data = data['FullName']
-                    form.email.data = data['Email']
+                cur.execute("SELECT * FROM users WHERE UserID=%s", [user])
 
+                rows = cur.fetchone()
+                temp = []
+                '''for row in rows:
+                    data = row
+                    temp.append(data)
+                    print(temp)
+                '''
+                print(rows)
+                mysql.connection.commit()
+                cur.close()
         elif request.method == 'POST':
             if login:
                 user = session['id']
@@ -298,7 +312,8 @@ def profile():
                             [username, Fullname, email, user])
                 mysql.connection.commit()
                 cur.close()
-                flash('Your account has been updated!', 'success')
+            flash('Your account has been updated!', 'success')
+
         return redirect(url_for('profile'))
     return render_template('profile.html', form=form)
 
