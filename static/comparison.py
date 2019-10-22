@@ -2,18 +2,27 @@ from PIL import Image
 from sklearn.metrics.pairwise import euclidean_distances, cosine_similarity
 import numpy as np
 import glob
-
+import pandas as pd
+import matplotlib.pyplot as plt
+from math import sqrt
+from app import *
+import ntpath
 
 images = glob.glob('/root/PycharmProjects/photography/static/**/*jpg', recursive=True)
+# test image
 
 new_image = Image.open('/root/PycharmProjects/photography/static/im.jpg')
 new_image1 = new_image.resize((400, 400))
 size1 = new_image1.size
 img3 = np.shape(new_image1)
 img4 = np.array(new_image1)
-img5 = img4.reshape(-1, 2)
-img6 = img5.flatten()
+img6 = img4.flatten()
 difference = []
+all_images = []
+new_list = []
+joined = []
+full_list = []
+
 for image in images:
     with open(image, 'rb') as file:
         img = Image.open(file)
@@ -22,8 +31,19 @@ for image in images:
         size = new.size
         img0 = np.shape(new)
         img1 = np.array(new)
-        img2 = img1.reshape(-1, 2)
-        img7 = img2.flatten()
+        img7 = img1.flatten()
         difference = euclidean_distances([img6], [img7])
-        print(euclidean_distances([img6], [img7]))
 
+        for i in difference:
+            new_difference = (i[0])
+            new_list.append(new_difference)
+
+all_images.append(images)
+var = all_images[0]
+joined = dict(zip(var, new_list))
+sort = sorted(joined.items(), key=lambda x: x[1])
+# print(sort)
+if sort:
+    for i in sort:
+        full_list = i
+        print(os.path.basename(full_list[0]))

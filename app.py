@@ -249,16 +249,24 @@ def edit():
     if login:
         userid = session['id']
         cur = mysql.connection.cursor()
-        cur.execute('SELECT * FROM photos')
+        cur.execute('SELECT * FROM photos WHERE photographerid = %s', [userid])
         id = cur.fetchall()
+        photos = []
+        for row in id:
+            data = row['photoid']
+            date = row['date_posted']
+            name = row['photo']
+            # photos.append(data)
+            photos.append(name)
 
-        cursor = mysql.connection.cursor()
-        # cursor.execute('SELECT photo from photos WHERE photographerid = %s', [photoid])
-        print(id)
+        print(photos)
+
+
         if edit:
-            #   result = cursor.execute('DELETE FROM photos WHERE photoid = %s', [photoid])
-
-            if id:
+            cur = mysql.connection.cursor()
+            result = cur.execute('SELECT photoid;p-[-[ FROM photos where photo= %s', [name])
+            print(result)
+            if photos:
                 flash('SUCCESS', 'success')
             else:
                 flash('FAILURE', 'danger')
