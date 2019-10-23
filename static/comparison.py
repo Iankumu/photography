@@ -1,13 +1,9 @@
-from PIL import Image
-from sklearn.metrics.pairwise import euclidean_distances, cosine_similarity
-import numpy as np
 import glob
-import pandas as pd
-import matplotlib.pyplot as plt
-from math import sqrt
-from app import *
-import ntpath
+import numpy as np
+from sklearn.metrics.pairwise import euclidean_distances
 
+from app import *
+mysql = MySQL(app)
 images = glob.glob('/root/PycharmProjects/photography/static/**/*jpg', recursive=True)
 # test image
 
@@ -22,7 +18,7 @@ all_images = []
 new_list = []
 joined = []
 full_list = []
-
+photoid = []
 for image in images:
     with open(image, 'rb') as file:
         img = Image.open(file)
@@ -46,4 +42,12 @@ sort = sorted(joined.items(), key=lambda x: x[1])
 if sort:
     for i in sort:
         full_list = i
-        print(os.path.basename(full_list[0]))
+        filename = os.path.basename(full_list[0])
+        print(filename)
+
+'''
+cur = mysql.connection.cursor()
+result = cur.execute('SELECT photographerid FROM photos WHERE photo = %s', filename)
+mysql.connection.commit()
+cur.close()
+print(result)'''
