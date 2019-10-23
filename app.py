@@ -9,6 +9,7 @@ from wtforms.validators import InputRequired
 from PIL import Image
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
+CLIENT_FOLDER = '/root/PycharmProjects/photography/static/Client_Uploads'
 app = Flask(__name__)
 app.secret_key = 'secret123'
 
@@ -24,6 +25,7 @@ mysql = MySQL(app)
 
 # config image format
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['CLIENT_FOLDER'] = CLIENT_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
 
@@ -243,6 +245,29 @@ def upload_file():
             return redirect(request.url)
 
 
+'''@app.route('/uploads')
+def Client_Upload():
+    return render_template('Client_Uploads.html')
+
+
+@app.route('/client_uploads', methods=['POST', 'GET'])
+def client_upload():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part', 'danger')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected for uploading', 'danger')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+
+            file.save(os.path.join(app.config['CLIENT_FOLDER'], filename))
+            flash("Image Uploaded Successfully....Comparison is in progress...", "success")
+'''
+
 @app.route('/edit', methods=['POST', 'GET'])
 @is_logged_in
 def edit():
@@ -260,7 +285,6 @@ def edit():
             photos.append(name)
 
         print(photos)
-
 
         if edit:
             cur = mysql.connection.cursor()

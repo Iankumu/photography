@@ -3,7 +3,8 @@ import numpy as np
 from sklearn.metrics.pairwise import euclidean_distances
 
 from app import *
-mysql = MySQL(app)
+
+# def comparison(img):
 images = glob.glob('/root/PycharmProjects/photography/static/**/*jpg', recursive=True)
 # test image
 
@@ -45,9 +46,10 @@ if sort:
         filename = os.path.basename(full_list[0])
         print(filename)
 
-'''
-cur = mysql.connection.cursor()
-result = cur.execute('SELECT photographerid FROM photos WHERE photo = %s', filename)
-mysql.connection.commit()
-cur.close()
-print(result)'''
+    ''' cur = app.app_context(mysql.connect.cursor())
+        result = cur.execute('SELECT photographerid FROM photos WHERE photo = %s', filename)
+        app.app_context(mysql.connect.commit())
+        cur.close()
+        print(result)'''
+
+# comparison()
