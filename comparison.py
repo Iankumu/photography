@@ -4,7 +4,7 @@ from PIL import Image
 from sklearn.metrics.pairwise import euclidean_distances
 import os
 
-images = glob.glob('/root/PycharmProjects/photography/static/**/*jpg', recursive=True)
+images = glob.glob('/root/PycharmProjects/photography/static**/*jpg', recursive=True)
 
 
 def image_comparison(img):

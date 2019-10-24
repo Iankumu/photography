@@ -9,7 +9,6 @@ from wtforms import Form, PasswordField, validators, StringField, BooleanField
 from wtforms.validators import InputRequired
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
-ALL_UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/All_Uploads'
 CLIENT_FOLDER = '/root/PycharmProjects/photography/static/Client_Uploads'
 app = Flask(__name__)
 app.secret_key = 'secret123'
@@ -26,7 +25,6 @@ mysql = MySQL(app)
 
 # config image format
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['ALL_UPLOAD_FOLDER'] = ALL_UPLOAD_FOLDER
 app.config['CLIENT_FOLDER'] = CLIENT_FOLDER
 
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
@@ -230,7 +228,6 @@ def upload_file():
             filename = secure_filename(file.filename)
 
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            file.save(os.path.join(app.config['ALL_UPLOAD_FOLDER'], filename))
             # file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file_name = file.filename
             flash("Image Uploaded Successfully", "success")
@@ -285,10 +282,8 @@ def client_upload():
                         data = row['photographerid']
                         temp.append(data)
                     mysql.connection.commit()
-                    if temp == []:
-                        continue
                     print(temp)
-            return render_template('Comparison.html')
+            return render_template('Comparison.html', image_names=temp)
         flash("Image Uploaded Successfully....Comparison is in progress...", "success")
 
 

@@ -1,1 +1,7 @@
-Comparison is in progress
+{% extends 'layout.html' %}
+{% block body %}
+
+{% for row in image_names %}
+<h1>{{row}}</h1>
+{% endfor %}
+{% endblock %}
