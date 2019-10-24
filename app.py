@@ -228,7 +228,6 @@ def upload_file():
             filename = secure_filename(file.filename)
 
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            # file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file_name = file.filename
             flash("Image Uploaded Successfully", "success")
 
@@ -268,23 +267,33 @@ def client_upload():
             file.save(os.path.join(app.config['CLIENT_FOLDER'], filename))
             filepath = os.path.join(app.config['CLIENT_FOLDER'], filename)
             comparisons = comparison.image_comparison(filepath)
-            # print(comparisons)
+            images = []
             if comparisons:
                 for i in comparisons:
                     full_list = i
                     new_filename = os.path.basename(full_list[0])
+                    images.append(new_filename)
                     print(new_filename)
+
                     cur = mysql.connection.cursor()
                     cur.execute("SELECT * FROM photos WHERE photo = %s", [new_filename])
                     rows = cur.fetchall()
-                    temp = []
                     for row in rows:
                         data = row['photographerid']
-                        temp.append(data)
                     mysql.connection.commit()
-                    print(temp)
-            return render_template('Comparison.html', image_names=temp)
-        flash("Image Uploaded Successfully....Comparison is in progress...", "success")
+                    cur.close()
+
+                    cur = mysql.connection.cursor()
+                    cur.execute("SELECT * FROM users WHERE UserID = %s", [data])
+                    rows = cur.fetchall()
+                    name = []
+                    for row in rows:
+                        Fullname = row['FullName']
+                        name.append(Fullname)
+                        print(Fullname)
+                    cur.close()
+
+        return render_template('Comparison.html', image_names=Fullname, photo=images)
 
 
 @app.route('/edit', methods=['POST', 'GET'])
