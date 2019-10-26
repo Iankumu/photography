@@ -1,5 +1,6 @@
 import os
 from flask_mail import Mail
+from werkzeug.exceptions import abort
 import comparison
 import methods
 from functools import wraps
@@ -9,12 +10,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField, SubmitField
 from wtforms.validators import InputRequired, ValidationError
-from itertools import chain
+from itsdangerous import URLSafeTimedSerializer
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
 CLIENT_FOLDER = '/root/PycharmProjects/photography/static/Client_Uploads'
 app = Flask(__name__)
-app.secret_key = 'secret123'
+app.config['SECRET_KEY'] = 'secret123'
 
 # config MYSQL
 app.config['MYSQL_HOST'] = '127.0.0.1'
@@ -38,8 +39,9 @@ mail = Mail(app)
 # config image format
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['CLIENT_FOLDER'] = CLIENT_FOLDER
-
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
+
+app.config['SECURITY_RECOVERABLE'] = True
 
 
 @app.route('/')
@@ -339,11 +341,9 @@ def edit():
             photos.append(name)
         mysql.connection.commit()
         cur.close()
-        allImages = dict(zip(photos, photoid))
+        allImages = dict(zip(photoid, photos))
         print(allImages)
-        if edit:
-            cur = mysql.connection.cursor()
-            cur.execute("SELECT photoid FROM photos WHERE ")
+
         # os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
     return redirect('dashboard')
@@ -417,7 +417,8 @@ def profile():
         if login:
             user = session['id']
             cur = mysql.connection.cursor()
-            cur.execute('UPDATE users SET UserName=%s, FullName = %s, Email = %s WHERE UserID = %s', [username, Fullname, email,user])
+            cur.execute('UPDATE users SET UserName=%s, FullName = %s, Email = %s WHERE UserID = %s',
+                        [username, Fullname, email, user])
             mysql.connection.commit()
             cur.close()
         flash('Your account has been updated!', 'success')

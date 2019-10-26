@@ -12,13 +12,12 @@ def get_reset_token(userid, expires_sec=1800):
         user_id = row['UserID']
     app.mysql.connection.commit()
     cur.close()
-    s = serial(app.secret_key, expires_sec)
+    s = serial(app.app.config['SECRET_KEY'], expires_sec)
     return s.dumps({userid.get(user_id)}).decode('utf-8')
 
 
-
 def verify(token):
-    s = serial(app.secret_key)
+    s = serial(app.app.config['SECRET_KEY'])
     try:
         user_id = s.loads(token)['userid']
     except:
@@ -30,7 +29,9 @@ def send_reset_email(user):
     token = get_reset_token(user)
     msg = Message('Password Reset Request', sender='ikariuki741@gmail.com', recipients=[user.get(user.email)])
     msg.body = f'''To reset your password visit the following link:
-   {app.url_for('reset_token',token=token,_external=True)}
+   {app.url_for('reset_token', token=token, _external=True)}
    If you did not make this request then simple ignore this email and no changes will be made 
    '''
     app.mail.send(msg)
+
+
