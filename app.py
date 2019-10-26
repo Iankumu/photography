@@ -1,12 +1,15 @@
 import os
+from flask_mail import Mail
 import comparison
+import methods
 from functools import wraps
 from flask import Flask, render_template, flash, redirect, url_for, session, request, send_from_directory
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from wtforms import Form, PasswordField, validators, StringField, BooleanField
-from wtforms.validators import InputRequired
+from wtforms import Form, PasswordField, validators, StringField, BooleanField, SubmitField
+from wtforms.validators import InputRequired, ValidationError
+from itertools import chain
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
 CLIENT_FOLDER = '/root/PycharmProjects/photography/static/Client_Uploads'
@@ -22,6 +25,15 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 # initialize MYSQL
 mysql = MySQL(app)
+
+# smtp
+app.config['MAIL_SERVER'] = 'stmp.goolemail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('EMAIL_USER')
+app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASS')
+
+mail = Mail(app)
 
 # config image format
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -61,17 +73,31 @@ class LoginForm(Form):
 
 # Update Form
 class UpdateForm(Form):
-    name = StringField('FullName', [validators.length(min=1, max=50)])
-    username = StringField('UserName', [validators.Length(min=4, max=25)])
-    email = StringField('Email', [validators.Length(min=6, max=35)])
+    name = StringField('FullName')
+    username = StringField('UserName')
+    email = StringField('Email')
 
 
-class ForgotForm(Form):
+class RequestResetForm(Form):
     email = StringField('Email', [validators.Length(min=6, max=35)])
+    submit = SubmitField('Request Password Reset')
+
+    @staticmethod
+    def validate_email(email):
+        cur = mysql.connection.cursor()
+        cur.execute('SELECT Email FROM users')
+        id = cur.fetchall()
+        for row in id:
+            user = row['Email']
+            if user == email:
+                raise ValidationError('There is no accout with that Email.. You must Register First')
 
 
 class PasswordResetForm(Form):
-    current_password = PasswordField('Current Password', [validators.data_required(), validators.Length(min=4, max=80)])
+    password = PasswordField('Password', [validators.DataRequired(),
+                                          validators.EqualTo('confirm', message='Password does not match')])
+    confirmPassword = PasswordField('Confirm Password')
+    submit = SubmitField('Reset Password')
 
 
 # Registration
@@ -273,8 +299,7 @@ def client_upload():
                     full_list = i
                     new_filename = os.path.basename(full_list[0])
                     images.append(new_filename)
-                    print(new_filename)
-
+                    # print(images)
                     cur = mysql.connection.cursor()
                     cur.execute("SELECT * FROM photos WHERE photo = %s", [new_filename])
                     rows = cur.fetchall()
@@ -282,18 +307,19 @@ def client_upload():
                         data = row['photographerid']
                     mysql.connection.commit()
                     cur.close()
-
+                    # print(data)
                     cur = mysql.connection.cursor()
                     cur.execute("SELECT * FROM users WHERE UserID = %s", [data])
                     rows = cur.fetchall()
-                    name = []
-                    for row in rows:
-                        Fullname = row['FullName']
-                        name.append(Fullname)
-                        print(Fullname)
-                    cur.close()
+                    names = []
 
-        return render_template('Comparison.html', image_names=Fullname, photo=images)
+                    for row in rows:
+                        data = row['FullName']
+                        names.append(data)
+                        print(names)
+                    mysql.connection.commit()
+                    cur.close()
+        return render_template('Comparison.html', photo=images, image_names=names)
 
 
 @app.route('/edit', methods=['POST', 'GET'])
@@ -305,74 +331,96 @@ def edit():
         cur.execute('SELECT * FROM photos WHERE photographerid = %s', [userid])
         id = cur.fetchall()
         photos = []
+        photoid = []
         for row in id:
             data = row['photoid']
-            date = row['date_posted']
             name = row['photo']
-            # photos.append(data)
+            photoid.append(data)
             photos.append(name)
-
-        print(photos)
-
+        mysql.connection.commit()
+        cur.close()
+        allImages = dict(zip(photos, photoid))
+        print(allImages)
         if edit:
             cur = mysql.connection.cursor()
-            result = cur.execute('SELECT photoid FROM photos where photo= %s', [name])
-            print(result)
-            if photos:
-                flash('SUCCESS', 'success')
-            else:
-                flash('FAILURE', 'danger')
-            # os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            cur.execute("SELECT photoid FROM photos WHERE ")
+        # os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
     return redirect('dashboard')
 
 
-'''
+@app.route('/Reset_Password', methods=['GET', 'POST'])
+def reset_request():
+    form = RequestResetForm()
+    if not is_logged_in(verify=True):
+        form = RequestResetForm()
+        if form.validate():
+            email = request.form['Email']
+            cur = mysql.connection.cursor()
+            cur.execute("SELECT * From Users WHERE email =%s", [email])
+            data = cur.fetchone()
+            userid = data['UserID']
+            user = methods.get_reset_token(userid=userid)
+            print(email)
+            methods.send_reset_email(user)
+            flash('An Email has been sent with instructions to reset the password', 'info')
+            return redirect(url_for('login'))
+    return render_template('reset_request.html', title='Reset Password', form=form)
 
 
-@app.route('/forgot', methods=['GET', 'POST'])
-def forgot():
-    form = ForgotForm(request.form)
-    error = None
-    message = None
-    return render_template('forgot.html', form=form, error=error, message=message)
+@app.route('/Reset_Password/<token>', methods=['GET', 'POST'])
+def reset_token(token):
+    if is_logged_in(verify=True):
+        return redirect(url_for('dashboard'))
 
-
-'''
+    if not is_logged_in():
+        user = methods.verify(token)
+        if user is None:
+            flash('That is an invalid or expired token ', 'warning')
+        return redirect(url_for('reset_request '))
+    form = PasswordResetForm()
+    if form.validate():
+        hashed_password = generate_password_hash(form.password.data, method='sha256')
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE users SET Password = %s", [hashed_password])
+        mysql.connection.commit()
+        cur.close()
+        flash('Your passsword has been updated', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_token.html', title='Reset Password', form=form)
 
 
 @app.route('/profile', methods=['POST', 'GET'])
 def profile():
     form = UpdateForm(request.form)
-    if request.method == 'POST' or request.method == 'GET' and form.validate():
+    if form.validate():
         username = form.username.data
         Fullname = form.name.data
         email = form.email.data
-        if request.method == 'GET':
-            if login:
-                user = session['id']
-                cur = mysql.connection.cursor()
-                cur.execute("SELECT * FROM users WHERE UserID=%s", [user])
+    if request.method == 'GET':
+        if login:
+            user = session['id']
+            cur = mysql.connection.cursor()
+            cur.execute('SELECT * FROM users WHERE UserID=%s', [user])
+            rows = cur.fetchall()
+            for row in rows:
+                uname = row['UserName']
+                name = row['FullName']
+                mail = row['Email']
 
-                rows = cur.fetchone()
-                temp = []
-                '''for row in rows:
-                    data = row
-                    temp.append(data)
-                    print(temp)
-                '''
-                print(rows)
-                mysql.connection.commit()
-                cur.close()
-        elif request.method == 'POST':
-            if login:
-                user = session['id']
-                cur = mysql.connection.cursor()
-                cur.execute('UPDATE users SET UserName =%s,FullName = %s, Email =%s WHERE UserID =%s)',
-                            [username, Fullname, email, user])
-                mysql.connection.commit()
-                cur.close()
-            flash('Your account has been updated!', 'success')
+                form.username.data = uname
+                form.email.data = mail
+                form.name.data = name
+            mysql.connection.commit()
+            cur.close()
+    elif request.method == 'POST':
+        if login:
+            user = session['id']
+            cur = mysql.connection.cursor()
+            cur.execute('UPDATE users SET UserName=%s, FullName = %s, Email = %s WHERE UserID = %s', [username, Fullname, email,user])
+            mysql.connection.commit()
+            cur.close()
+        flash('Your account has been updated!', 'success')
 
         return redirect(url_for('profile'))
     return render_template('profile.html', form=form)
