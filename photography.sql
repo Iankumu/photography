@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Oct 16, 2019 at 05:18 PM
+-- Generation Time: Oct 29, 2019 at 07:18 AM
 -- Server version: 10.3.16-MariaDB
 -- PHP Version: 7.3.7
 
@@ -43,7 +43,16 @@ INSERT INTO `photos` (`photoid`, `photo`, `photographerid`, `date_posted`) VALUE
 (1, 'index.jpeg', 18, '2019-10-15 20:06:28'),
 (2, 'muzammil-soorma-ayV1mD3HGyg-unsplash.jpg', 18, '2019-10-15 20:07:27'),
 (3, 'muzammil-soorma-ayV1mD3HGyg-unsplash.jpg', 16, '2019-10-16 09:17:19'),
-(4, 'luis-rocha-cRqHwyVb9ts-unsplash.jpg', 16, '2019-10-16 09:18:07');
+(4, 'luis-rocha-cRqHwyVb9ts-unsplash.jpg', 16, '2019-10-16 09:18:07'),
+(5, 'im.jpg', 18, '2019-10-16 16:42:07'),
+(6, 'index.jpeg', 16, '2019-10-17 16:08:59'),
+(7, 'ampersand-creative-co-pp_oXEb2H48-unsplash.jpg', 16, '2019-10-17 18:51:01'),
+(8, 'snap.png', 16, '2019-10-17 19:29:13'),
+(10, 'james-adams-HW2jyY7lmig-unsplash.jpg', 18, '2019-10-21 16:14:50'),
+(11, 'hybrid-8F1YBgAGqgA-unsplash.jpg', 16, '2019-10-21 16:21:31'),
+(12, 'photo.jpg', 16, '2019-10-24 15:30:11'),
+(13, 'jude-beck-AMBT5zkVMV4-unsplash.jpg', 16, '2019-10-24 16:35:44'),
+(14, 'wedding.jpg', 19, '2019-10-25 08:56:52');
 
 -- --------------------------------------------------------
 
@@ -66,7 +75,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`UserID`, `FullName`, `UserName`, `Email`, `Date_Created`, `Password`) VALUES
 (16, 'Ian Kumu', '112449', 'ian.kumu@strathmore.edu', '2019-09-15 15:22:01', 'sha256$feVDGB6e$08d7a720bad32cd63d67b6e70b91dd604d3b044fc72c1f51a90e20c4bd4c6fd2'),
-(18, 'Ian Kariuki', '112449', 'ikariuki741@gmail.com', '2019-10-10 14:29:16', 'sha256$9TXpJAoB$9fd3fab88186574e8fac253d060cbfa6f44acfd125cf4695c2531995be793589');
+(18, 'Ian Kariuki', 'Ian01', 'ikariuki741@gmail.com', '2019-10-10 14:29:16', 'sha256$9TXpJAoB$9fd3fab88186574e8fac253d060cbfa6f44acfd125cf4695c2531995be793589'),
+(19, 'Kevin', 'Kevin01', 'kevin@gmail.com', '2019-10-25 08:55:44', 'sha256$hVF2hOpT$c49c6095f81ddbe7371f1062cdcb959b77b6a4b511aa05633ecd92eab0d943b9');
 
 --
 -- Indexes for dumped tables
@@ -93,13 +103,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `photos`
 --
 ALTER TABLE `photos`
-  MODIFY `photoid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `photoid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `UserID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `UserID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- Constraints for dumped tables

@@ -1,4 +1,3 @@
-itsdangerous
 scikit-learn
 numpy
 wtforms

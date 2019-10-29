@@ -1,16 +1,17 @@
 import os
+import uuid
+from flask_change_password import flask_change_password, ChangePasswordForm, ChangePassword,SetPasswordForm
+from flask_security import reset_password_instructions_sent, password_reset
 from flask_mail import Mail
-from werkzeug.exceptions import abort
 import comparison
 import methods
 from functools import wraps
-from flask import Flask, render_template, flash, redirect, url_for, session, request, send_from_directory
+from flask import Flask, render_template, flash, redirect, url_for, session, request
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField, SubmitField
 from wtforms.validators import InputRequired, ValidationError
-from itsdangerous import URLSafeTimedSerializer
 
 UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
 CLIENT_FOLDER = '/root/PycharmProjects/photography/static/Client_Uploads'
@@ -173,6 +174,9 @@ def login():
     return render_template('login.html')
 
 
+
+
+
 # Check if user is logged in
 def is_logged_in(verify):
     @wraps(verify)
@@ -219,7 +223,7 @@ def logout():
 
 
 # uploading files
-app.config["ALLOWED_EXTENSIONS"] = ['PNG', 'JPG', 'JPEG']
+app.config["ALLOWED_EXTENSIONS"] = ['JPG']
 
 
 # checks if a file is of the allowed extension
@@ -314,14 +318,13 @@ def client_upload():
                     cur.execute("SELECT * FROM users WHERE UserID = %s", [data])
                     rows = cur.fetchall()
                     names = []
-
                     for row in rows:
                         data = row['FullName']
                         names.append(data)
                         print(names)
                     mysql.connection.commit()
                     cur.close()
-        return render_template('Comparison.html', photo=images, image_names=names)
+        return render_template('Comparison.html', photo=images, image_names=data)
 
 
 @app.route('/edit', methods=['POST', 'GET'])
