@@ -13,8 +13,8 @@ from werkzeug.utils import secure_filename
 from wtforms import Form, PasswordField, validators, StringField, BooleanField, SubmitField
 from wtforms.validators import InputRequired, ValidationError
 
-UPLOAD_FOLDER = '/root/PycharmProjects/photography/static/'
-CLIENT_FOLDER = '/root/PycharmProjects/photography/static/Client_Uploads'
+UPLOAD_FOLDER = 'C:/Users/User/Documents/Strathmore/ICS/Academic Work/Year 2/Semester 2/IS Project/photography/static'
+CLIENT_FOLDER = 'C:/Users/User/Documents/Strathmore/ICS/Academic Work/Year 2/Semester 2/IS Project/photography/static/Client_Uploads'
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret123'
 
@@ -93,7 +93,7 @@ class RequestResetForm(Form):
         for row in id:
             user = row['Email']
             if user == email:
-                raise ValidationError('There is no accout with that Email.. You must Register First')
+                raise ValidationError('There is no account with that Email.. You must Register First')
 
 
 class PasswordResetForm(Form):
@@ -252,11 +252,11 @@ def upload_file():
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
-        file = request.files['file']
+        file = request.files.getlist('file')[0]
         if file.filename == '':
             flash('No file selected for uploading')
             return redirect(request.url)
-        if file and allowed_file(file.filename):
+        elif file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
 
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))

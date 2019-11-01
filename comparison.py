@@ -2,18 +2,16 @@ import glob
 import numpy as np
 from PIL import Image
 from sklearn.metrics.pairwise import euclidean_distances
-import os
 
-images = glob.glob('/root/PycharmProjects/photography/static**/*jpg', recursive=True)
+images = glob.glob('C:/Users/User/Documents/Strathmore/ICS/Academic Work/Year 2/Semester 2/IS Project/photography/static**/*jpg', recursive=True)
 
 
 def image_comparison(img):
     # test image
-    new_image = Image.open(img)
-    new_image1 = new_image.resize((400, 400))
-    size1 = new_image1.size
-    img3 = np.shape(new_image1)
-    img4 = np.array(new_image1)
+    resized_image = Image.open(img).resize((400, 400))
+    size1 = resized_image.size
+    img3 = np.shape(resized_image)
+    img4 = np.array(resized_image)
     img6 = img4.flatten()
     all_images = []
     new_list = []

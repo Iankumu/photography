@@ -1,4 +1,4 @@
-#!C:\Users\ikari\PycharmProjects\Photographer\venv\Scripts\python.exe
+#!"C:\Users\User\Documents\Strathmore\ICS\Academic Work\Year 2\Semester 2\IS Project\photography\venv\Scripts\python.exe"
 # EASY-INSTALL-ENTRY-SCRIPT: 'setuptools==40.8.0','console_scripts','easy_install'
 __requires__ = 'setuptools==40.8.0'
 import re
