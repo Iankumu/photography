@@ -1,9 +1,9 @@
 import os
 import uuid
-from flask_change_password import flask_change_password, ChangePasswordForm, ChangePassword,SetPasswordForm
+from flask_change_password import flask_change_password, ChangePasswordForm, ChangePassword, SetPasswordForm
 from flask_security import reset_password_instructions_sent, password_reset
 from flask_mail import Mail
-import comparison
+from comparison import image_comparison
 import methods
 from functools import wraps
 from flask import Flask, render_template, flash, redirect, url_for, session, request
@@ -174,9 +174,6 @@ def login():
     return render_template('login.html')
 
 
-
-
-
 # Check if user is logged in
 def is_logged_in(verify):
     @wraps(verify)
@@ -277,54 +274,45 @@ def upload_file():
             return redirect(request.url)
 
 
-@app.route('/client_uploads')
-def Client_Upload():
-    return render_template('Client_Uploads.html')
-
-
 @app.route('/client_uploads', methods=['POST', 'GET'])
 def client_upload():
     if request.method == 'POST':
-        # check if the post request has the file part
+        # check if the post request has any files
         if 'file' not in request.files:
             flash('No file part', 'danger')
             return redirect(request.url)
         file = request.files['file']
+        # check if filename is empty
         if file.filename == '':
             flash('No file selected for uploading', 'danger')
+            # render the form again
             return redirect(request.url)
-        if file and allowed_file(file.filename):
+        # check if the file type is allowed
+        elif allowed_file(file.filename):
+            # get the secure filename
             filename = secure_filename(file.filename)
-
-            file.save(os.path.join(app.config['CLIENT_FOLDER'], filename))
-            filepath = os.path.join(app.config['CLIENT_FOLDER'], filename)
-            comparisons = comparison.image_comparison(filepath)
-            images = []
-            if comparisons:
-                for i in comparisons:
-                    full_list = i
-                    new_filename = os.path.basename(full_list[0])
-                    images.append(new_filename)
-                    # print(images)
-                    cur = mysql.connection.cursor()
-                    cur.execute("SELECT * FROM photos WHERE photo = %s", [new_filename])
-                    rows = cur.fetchall()
-                    for row in rows:
-                        data = row['photographerid']
-                    mysql.connection.commit()
-                    cur.close()
-                    # print(data)
-                    cur = mysql.connection.cursor()
-                    cur.execute("SELECT * FROM users WHERE UserID = %s", [data])
-                    rows = cur.fetchall()
-                    names = []
-                    for row in rows:
-                        data = row['FullName']
-                        names.append(data)
-                        print(names)
-                    mysql.connection.commit()
-                    cur.close()
-        return render_template('Comparison.html', photo=images, image_names=data)
+            # get the file path
+            file_path = os.path.join(app.config['CLIENT_FOLDER'], filename)
+            # save file
+            file.save(file_path)
+            # initiate cursor
+            cur = mysql.connection.cursor()
+            # get all photos
+            cur.execute("SELECT * FROM photos")
+            # get all photos after ranking then
+            photos = cur.fetchall()
+            ranked_photos = image_comparison(file_path, photos)
+            # map the photos with the photographer and return the photographer name ranked in order of average
+            # return list of photographer objects structure {name,link )
+            # return a page will all the ranked photos
+            return render_template('Comparison.html', photos=ranked_photos, current_photo="Client_Uploads/" + filename)
+        # warn user of invalid type
+        else:
+            flash('Invalid file type', 'danger')
+            # render the form again
+            return redirect(request.url)
+    else:
+        return render_template('Comparison.html')
 
 
 @app.route('/edit', methods=['POST', 'GET'])
