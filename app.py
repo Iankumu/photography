@@ -1,4 +1,5 @@
 import os
+import glob
 import uuid
 from flask_change_password import flask_change_password, ChangePasswordForm, ChangePassword, SetPasswordForm
 from flask_security import reset_password_instructions_sent, password_reset
@@ -295,16 +296,42 @@ def client_upload():
             file_path = os.path.join(app.config['CLIENT_FOLDER'], filename)
             # save file
             file.save(file_path)
+            # get all photos
             # initiate cursor
             cur = mysql.connection.cursor()
-            # get all photos
-            cur.execute("SELECT * FROM photos")
-            # get all photos after ranking then
-            photos = cur.fetchall()
-            ranked_photos = image_comparison(file_path, photos)
-            # map the photos with the photographer and return the photographer name ranked in order of average
-            # return list of photographer objects structure {name,link )
-            # return a page will all the ranked photos
+            cur.execute("SELECT UserID from users")
+            photographers = cur.fetchall()
+            for row in photographers:
+                user = row['UserID']
+                userid = [user]
+
+                for i in userid:
+                   # print(userid)
+                    cur.execute("SELECT photo FROM photos where photographerid=%s ", [i])
+                    newer = cur.fetchall()
+                    ranked_photos = image_comparison(file_path, newer)
+                    # print(ranked_photos)
+
+                    # print(ranked_photos)
+                    res = [lis[1] for lis in ranked_photos]
+
+                    # finding the averages
+                    avgs = float(methods.Average(res))
+                    # print(avgs)
+
+                    values = [avgs]
+                    # print(values)
+                    all_values = []
+
+                    dictionary = dict(zip(userid, values))
+                    # print(dictionary)
+                    all_values.append(dictionary)
+                    print(all_values)
+                # dictionary = dict(zip(userid,avgs))
+                # print(dictionary)
+                # cur.execute("UPDATE users SET rank_avg = %s where UserID = %s", [avgs, i])
+                # print(j[1])
+                # get all photos after ranking them
             return render_template('Comparison.html', photos=ranked_photos, current_photo="Client_Uploads/" + filename)
         # warn user of invalid type
         else:
@@ -313,6 +340,9 @@ def client_upload():
             return redirect(request.url)
     else:
         return render_template('Comparison.html')
+
+
+images = glob.glob(os.getcwd() + "/static**/*jpg", recursive=True)
 
 
 @app.route('/edit', methods=['POST', 'GET'])

@@ -35,3 +35,5 @@ def send_reset_email(user):
     app.mail.send(msg)
 
 
+def Average(lst):
+    return sum(lst) / len(lst)

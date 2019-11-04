@@ -4,7 +4,20 @@ from PIL import Image
 from sklearn.metrics.pairwise import euclidean_distances
 import os
 
+
 images = glob.glob(os.getcwd() + "/static**/*jpg", recursive=True)
+
+# create a list for compared profiles
+compared_profiles = []
+
+# list of all photographers
+photographers = []
+
+# def get_photographers():
+#     cur = mysql.connection.cursor()
+#     cur.execute("SELECT UserID from users")
+#     photographers = cur.fetchall()
+#     return photographers
 
 
 def test_euclidean():
@@ -71,5 +84,8 @@ def image_comparison(my_image, image_objects):
         compared_images.append(
             (image_object["photo"], difference[0][0])
         )
-    # return sorted  according to the euclidean difference
+    # return sorted list according to the euclidean difference
     return sorted(compared_images, key=lambda x: x[1])
+
+
+# def profile_ranker():

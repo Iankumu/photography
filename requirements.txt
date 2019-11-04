@@ -4,3 +4,4 @@ wtforms
 werkzeug
 flask
 PIL
+flask-sqlalchemy
