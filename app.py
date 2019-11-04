@@ -1,5 +1,6 @@
 import os
 import glob
+import collections
 import uuid
 from flask_change_password import flask_change_password, ChangePasswordForm, ChangePassword, SetPasswordForm
 from flask_security import reset_password_instructions_sent, password_reset
@@ -296,23 +297,25 @@ def client_upload():
             file_path = os.path.join(app.config['CLIENT_FOLDER'], filename)
             # save file
             file.save(file_path)
-            # get all photos
+
             # initiate cursor
             cur = mysql.connection.cursor()
             cur.execute("SELECT UserID from users")
             photographers = cur.fetchall()
+            L = []
+            finalDict = {}
             for row in photographers:
                 user = row['UserID']
                 userid = [user]
 
                 for i in userid:
-                   # print(userid)
+                    # print(userid)
                     cur.execute("SELECT photo FROM photos where photographerid=%s ", [i])
                     newer = cur.fetchall()
                     ranked_photos = image_comparison(file_path, newer)
                     # print(ranked_photos)
 
-                    # print(ranked_photos)
+                    # get values from the tuple
                     res = [lis[1] for lis in ranked_photos]
 
                     # finding the averages
@@ -323,15 +326,31 @@ def client_upload():
                     # print(values)
                     all_values = []
 
-                    dictionary = dict(zip(userid, values))
-                    # print(dictionary)
-                    all_values.append(dictionary)
-                    print(all_values)
-                # dictionary = dict(zip(userid,avgs))
+                    diction = dict(zip(userid, values))
+                    L.append(diction)
+                    # print(L)
+
+                    for item in L:
+                        for Key, Value in item.items():
+                            finalDict[Key] = Value
+                    print(finalDict)
+                    # sort=sorted(finalDict,key=lambda x:x[1],reverse=True)
+                    # print(sort)
                 # print(dictionary)
-                # cur.execute("UPDATE users SET rank_avg = %s where UserID = %s", [avgs, i])
-                # print(j[1])
-                # get all photos after ranking them
+
+                # master dictionary
+
+                # merging dictionaries
+
+            # sorted(all_lists, reverse=True)
+            # print(all_lists)
+
+            # all_values.append(dictionary)
+
+            # print(dictionary)
+            # cur.execute("UPDATE users SET rank_avg = %s where UserID = %s", [avgs, i])
+            # print(j[1])
+            # get all photos after ranking them
             return render_template('Comparison.html', photos=ranked_photos, current_photo="Client_Uploads/" + filename)
         # warn user of invalid type
         else:
