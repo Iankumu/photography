@@ -88,7 +88,9 @@
           <div class="col-md-4">
             <div class="card mb-4 shadow-sm">
               <img class="im" src="{{url_for('static',filename=photo[0])}}">
-              <h3></h3>
+              {% for all in names %}
+              <h3>{{all}}</h3>
+              {% endfor %}
             </div>
           </div>
           {% endfor %}

@@ -303,6 +303,7 @@ def client_upload():
             cur.execute("SELECT UserID from users")
             photographers = cur.fetchall()
             L = []
+            credentials = []
             finalDict = {}
             for row in photographers:
                 user = row['UserID']
@@ -323,7 +324,7 @@ def client_upload():
                     # print(avgs)
 
                     values = [avgs]
-                    # print(values)
+                    # print(avgs)
                     all_values = []
 
                     diction = dict(zip(userid, values))
@@ -333,25 +334,28 @@ def client_upload():
                     for item in L:
                         for Key, Value in item.items():
                             finalDict[Key] = Value
-                    print(finalDict)
-                    # sort=sorted(finalDict,key=lambda x:x[1],reverse=True)
-                    # print(sort)
-                # print(dictionary)
 
-                # master dictionary
+                    # ranking profiles based on averages computed
 
-                # merging dictionaries
+            sort = sorted(finalDict.items(), key=lambda x: x[1])
+            # print(sort)
+            all_ids = [a[0] for a in sort]
+            # print(all_ids)
 
-            # sorted(all_lists, reverse=True)
-            # print(all_lists)
+            for ids in all_ids:
+                # print(all_ids)
+                cur.execute('SELECT * FROM users WHERE UserID = %s', [ids])
+                rows = cur.fetchall()
+                for roww in rows:
+                    name = roww['FullName']
+                    email = roww['Email']
 
-            # all_values.append(dictionary)
+                #print(name)
+                    # print(name ," ", email)
+                    credentials.append(name)
 
-            # print(dictionary)
-            # cur.execute("UPDATE users SET rank_avg = %s where UserID = %s", [avgs, i])
-            # print(j[1])
             # get all photos after ranking them
-            return render_template('Comparison.html', photos=ranked_photos, current_photo="Client_Uploads/" + filename)
+            return render_template('Comparison.html', photos=ranked_photos, current_photo="Client_Uploads/" + filename,names= credentials)
         # warn user of invalid type
         else:
             flash('Invalid file type', 'danger')
