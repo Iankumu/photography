@@ -1,0 +1,14 @@
+flask
+wtforms
+flask_security
+bcrypt
+flask_change_password
+flask_mysqldb
+flask_mail
+pillow
+numpy
+sklearn
+
+flask_sqlalchemy
+flask_migrate
+flask_script
