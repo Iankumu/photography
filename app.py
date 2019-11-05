@@ -302,7 +302,7 @@ def client_upload():
             cur = mysql.connection.cursor()
             cur.execute("SELECT UserID from users")
             photographers = cur.fetchall()
-            L = []
+            dictionaryList = []
             credentials = []
             finalDict = {}
             for row in photographers:
@@ -328,10 +328,10 @@ def client_upload():
                     all_values = []
 
                     diction = dict(zip(userid, values))
-                    L.append(diction)
+                    dictionaryList.append(diction)
                     # print(L)
 
-                    for item in L:
+                    for item in dictionaryList:
                         for Key, Value in item.items():
                             finalDict[Key] = Value
 
@@ -340,22 +340,22 @@ def client_upload():
             sort = sorted(finalDict.items(), key=lambda x: x[1])
             # print(sort)
             all_ids = [a[0] for a in sort]
-            # print(all_ids)
 
             for ids in all_ids:
-                # print(all_ids)
+
                 cur.execute('SELECT * FROM users WHERE UserID = %s', [ids])
                 rows = cur.fetchall()
                 for roww in rows:
                     name = roww['FullName']
                     email = roww['Email']
 
-                #print(name)
+                    # print(name)
                     # print(name ," ", email)
-                    credentials.append(name)
+                credentials.append(name)
 
             # get all photos after ranking them
-            return render_template('Comparison.html', photos=ranked_photos, current_photo="Client_Uploads/" + filename,names= credentials)
+            return render_template('Comparison.html', photos=ranked_photos, current_photo="Client_Uploads/" + filename,
+                                   names=credentials)
         # warn user of invalid type
         else:
             flash('Invalid file type', 'danger')
