@@ -11,7 +11,7 @@ def image_comparison(my_image, image_objects):
     :param image_objects: the photos from the photographer
     :param my_image: image to be compared
     :return :return a list of tuple structure
-    (photo_name,euclidean_difference,photographer_id)
+    (binary_image,euclidean_difference,photographer_id)
     """
     # open my image
     my_image = Image.open(my_image)
@@ -26,7 +26,7 @@ def image_comparison(my_image, image_objects):
     compared_images = []
 
     for image_object in image_objects:
-        image = Image.open(os.path.join(os.getcwd(), "static/" + image_object["photo"]))
+        image = Image.frombytes("L", image_object.get_size(), image_object.file)
         # resize the image
         image = image.resize((400, 400))
         # turn image into numpy nd array
@@ -37,7 +37,7 @@ def image_comparison(my_image, image_objects):
         difference = euclidean_distances([image], [my_image])
         # add a tuple of the photo id and the euclidean difference
         compared_images.append(
-            (image_object["photo"], difference[0][0], image["photographid"])
+            (image, difference[0][0], image_object.phographer_id)
         )
     # return sorted  according to the euclidean difference
     return sorted(compared_images, key=lambda x: x[1])

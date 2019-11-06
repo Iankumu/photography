@@ -5,37 +5,49 @@
     <span class="navbar-toggler-icon"></span>
   </button>
   <div class="collapse navbar-collapse" id="navbarNavDropdown">
-    <ul class="navbar-nav">
+    <ul class="navbar-nav nav-right">
       <li class="nav-item active">
         <a class="nav-link" href="{{ url_for('home') }}">Home <span class="sr-only">(current)</span></a>
       </li>
-      {% if session.Logged_in %}
+      {% if current_user.is_authenticated %}
+        {% if current_user.photographer %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('dashboard') }}">Porfolio</a>
+          </li>
+        {% else %}
+          <a href="{{ url_for('photographer_register') }}">
+            <button class="btn btn-primary">Become a photographer</button>
+          </a>
+        {% endif %}
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('dashboard') }}">Porfolio</a>
+          <a href="{{ url_for('client_upload') }}">
+            <button class="btn btn-primary">Upload Image</button>
+          </a>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown"
              aria-haspopup="true" aria-expanded="false">
-            {{ session.name }}
+            {{ current_user.first_name }} {{ current_user.second_name }}
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
             <a class="dropdown-item" href="{{ url_for('profile') }}">Profile</a>
-            <a class="dropdown-item" href="{{ url_for('upload') }}">Upload Image</a>
-            <a class="dropdown-item" href="{{ url_for('register') }}">Logout</a>
+            <a class="dropdown-item" href="{{ url_for('client_upload') }}">Upload Image</a>
+            <a class="dropdown-item" href="{{ url_for('security.logout') }}">Logout</a>
           </div>
         </li>
-        <a href="/uploads">
-          <button class="btn btn-primary">Upload Image</button>
-        </a>
       {% else %}
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('security.login') }}">Login</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('security.register') }}">Register</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link" href="{{ url_for('about') }}">About Us</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown"
+             aria-haspopup="true" aria-expanded="false">
+            Anonymous User
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <a class="dropdown-item" href="{{ url_for('security.login') }}">Login</a>
+            <a class="dropdown-item" href="{{ url_for('security.register') }}">Register</a>
+          </div>
         </li>
       {% endif %}
     </ul>

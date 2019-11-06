@@ -94,6 +94,10 @@ class RegistrationForm(BaseModelForm):
             raise ValidationError(get_message('INVALID_REDIRECT')[0])
 
 
-class PhotographerUploadForm(Form):
+class PhotoUploadForm(Form):
     name = StringField('first_name', [validators.length(min=2, max=100)])
+    file = FileField("Photo", [validators.required])
+
+
+class ClientPhotoForm(Form):
     file = FileField("Photo", [validators.required])

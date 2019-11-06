@@ -82,8 +82,16 @@ class Photo(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(255), index=True, unique=True)
     file = Column(LargeBinary)
+    # store as string in format dim1 x dim2
+    image_size = Column(String(255))
     photographer_id = Column(Integer, ForeignKey("photographer.id"), index=True)
     date_added = Column(DateTime, default=datetime.datetime.utcnow)
+
+    def set_size(self, dimension1, dimension2):
+        self.image_size = dimension1 + "x" + dimension2
+
+    def get_size(self):
+        return set(self.image_size.split("x"))
 
     def __repr__(self):
         return '<Photo {}>'.format(self.name)
