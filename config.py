@@ -7,10 +7,13 @@ CLIENT_FOLDER = 'C:/Users/User/Documents/Strathmore/ICS/Academic Work/Year 2/Sem
 
 
 class Config(object):
+    # alchemy configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
                               'sqlite:///' + os.path.join(basedir, 'db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # secret key
+    # TODO:PUT secret key in environmental variables
     SECRET_KEY = 'secret123'
     SECURITY_PASSWORD_SALT = 'super-secret-random-salt'
 
@@ -21,17 +24,22 @@ class Config(object):
     MYSQL_DB = 'photography'
     MYSQL_CURSORCLASS = 'DictCursor'
 
-    # smtp
-    MAIL_SERVER = 'stmp.goolemail.com'
+    # Email SMTP CONFIGURATION
+    MAIL_SERVER = 'smtp.gmail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get('EMAIL_USER')
-    MAIL_PASSWORD = os.environ.get('EMAIL_PASS')
+    MAIL_USERNAME = '' # yor email
+    MAIL_PASSWORD = '' #your email
+    MAIL_DEFAULT_SENDER = '' #your password
 
     # config image format
     UPLOAD_FOLDER = UPLOAD_FOLDER
     CLIENT_FOLDER = CLIENT_FOLDER
     MAX_CONTENT_LENGTH = 10 * 1024 * 1024
 
+    # FLASK SECURITY CONFIGURATIONS
     SECURITY_RECOVERABLE = True
     SECURITY_REGISTERABLE = True
+    SECURITY_POST_LOGIN_VIEW = '/'
+    SECURITY_TRACKABLE = True
+    SECURITY_EMAIL_SENDER = os.environ.get('EMAIL_USER')

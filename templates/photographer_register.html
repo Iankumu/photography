@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}
+{% block body %}
+  <header class="showcase">
+    <div class="content">
+      <div class="title">
+        <h1>Want to join our Photographer Community</h1>
+      </div>
+      <div class="text">
+        We help you get a client made for yo
+      </div>
+      <div class="button call">
+        <form action="{{ url_for('photographer_register') }}">
+          <input type="hidden" />
+          <input type="submit" class="photo" value="Join Now"/>
+        </form>
+      </div>
+    </div>
+  </header>
+{% endblock %}
+{% block footer %}
+  <!--Footer-->
+  <footer class="center bg-dark">
+    <p>Photography System &copy; 2019</p>
+  </footer>
+{% endblock %}

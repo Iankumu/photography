@@ -1,7 +1,10 @@
 flask
 wtforms
+WTForms-Alchemy
+
 flask_security
 bcrypt
+
 flask_change_password
 flask_mysqldb
 flask_mail
