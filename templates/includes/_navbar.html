@@ -12,7 +12,7 @@
       {% if current_user.is_authenticated %}
         {% if current_user.photographer %}
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('dashboard') }}">Porfolio</a>
+            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
           </li>
         {% else %}
           <a href="{{ url_for('photographer_register') }}">
@@ -20,12 +20,12 @@
           </a>
         {% endif %}
         <li class="nav-item">
-          <a href="{{ url_for('client_upload') }}">
-            <button class="btn btn-primary">Upload Image</button>
+          <a href="{{ url_for('find_photographer') }}">
+            <button class="btn btn-primary"> Find Photographer</button>
           </a>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown"
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown"
              aria-haspopup="true" aria-expanded="false">
             {{ current_user.first_name }} {{ current_user.second_name }}
           </a>

@@ -8,12 +8,45 @@
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
 <body>
+<style>
+  .input-hidden {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+  }
+</style>
 {% include 'includes/_navbar.html' %}
 {% include 'includes/_messages.html' %}
 {% block body %}{% endblock %}
 
 {% block footer %}{% endblock %}
+<script>
+  var splitTest = function (str) {
+    return str.split('\\').pop().split('/').pop();
+  }
+  var inputs = document.querySelectorAll('.input-hidden');
+  Array.prototype.forEach.call(inputs, function (input) {
+    var label = document.getElementById("file_label"),
+      labelVal = label.innerHTML;
 
+    input.addEventListener('change', function (e) {
+      var fileName = '';
+      if (this.files && this.files.length > 1)
+        fileName = (this.getAttribute('data-multiple-caption') || '').replace('{count}', this.files.length);
+      else {
+        console.log(e.target.value);
+        fileName = splitTest(e.target.value)
+      }
+      if (fileName)
+        document.getElementById("file_name").innerHTML = fileName;
+      else
+        label.innerHTML = labelVal;
+    });
+  });
+</script>
 <script src="https://kit.fontawesome.com/6e332fcb56.js" crossorigin="anonymous"></script>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

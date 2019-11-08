@@ -49,6 +49,7 @@ class User(Base, UserMixin):
     phone_number = Column(String(20), nullable=True)
     active = Column(Boolean, default=True)
     photographer = relationship("Photographer", uselist=False, back_populates="user")
+    current_photo = relationship("CurrentPhoto", uselist=False, back_populates="user")
     date_created = Column(DateTime, default=datetime.datetime.utcnow)
     current_login_at = Column(DateTime())
     last_login_ip = Column(String(100))
@@ -77,24 +78,44 @@ class Photographer(Base):
         return '<Photographer {}>'.format(self.id)
 
 
-class Photo(Base):
+class PhotoMixin:
+    file = Column(LargeBinary)
+    file_type = Column(String(100))
+    # dimension of the image x ad y
+    x = Column(Integer)
+    y = Column(Integer)
+
+    def set_size(self, x: int, y: int):
+        # set the size of the photo
+        self.x = x
+        self.y = y
+
+    def get_size(self):
+        return self.x, self.y
+
+    def add_image_data(self, dimension1, dimension2, file_type):
+        self.set_size(dimension1, dimension2)
+        self.file_type = file_type
+
+
+class CurrentPhoto(Base, PhotoMixin):
+    __tablename__ = "current_photo"
+    id = Column(Integer, primary_key=True)
+    user_id = Column('user_id', Integer(), ForeignKey('user.id'), unique=True)
+    user = relationship("User", uselist=False, back_populates="current_photo")
+
+    date_added = Column(DateTime, default=datetime.datetime.utcnow)
+
+    def __repr__(self):
+        return '<Current Photo {}>'.format(self.id)
+
+
+class Photo(Base, PhotoMixin):
     __tablename__ = "photo"
     id = Column(Integer, primary_key=True)
     name = Column(String(255), index=True, unique=True)
-    file = Column(LargeBinary)
-    # store as string in format dim1 x dim2
-    image_size = Column(String(255))
     photographer_id = Column(Integer, ForeignKey("photographer.id"), index=True)
     date_added = Column(DateTime, default=datetime.datetime.utcnow)
-
-    def set_size(self, dimension1, dimension2):
-        self.image_size = dimension1 + "x" + dimension2
-
-    def get_size(self):
-        return set(self.image_size.split("x"))
-
-    def __repr__(self):
-        return '<Photo {}>'.format(self.name)
 
 
 if __name__ == '__main__':

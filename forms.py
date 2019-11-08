@@ -7,9 +7,12 @@ from markupsafe import Markup
 from wtforms import FileField, validators, PasswordField, HiddenField, SubmitField, Field
 from wtforms.validators import EqualTo, ValidationError
 from wtforms.widgets import HiddenInput
-from wtforms_alchemy import Form
+from wtforms import Form
+
+from wtforms_alchemy import Form as AlchemyForm
 from wtforms_alchemy.fields import StringField
 from wtforms_alchemy.validators import Unique
+
 from wtforms_components import ModelForm
 
 from models import User
@@ -20,26 +23,6 @@ class BaseModelForm(ModelForm):
         return (True if request.method in ('POST', 'PUT', 'PATCH', 'DELETE') else False) and self.validate()
 
     def hidden_tag(self, *fields):
-        """Render the form's hidden fields in one call.
-
-        A field is considered hidden if it uses the
-        :class:`~wtforms.widgets.HiddenInput` widget.
-
-        If ``fields`` are given, only render the given fields that
-        are hidden.  If a string is passed, render the field with that
-        name if it exists.
-
-        .. versionchanged:: 0.13
-
-           No longer wraps inputs in hidden div.
-           This is valid HTML 5.
-
-        .. versionchanged:: 0.13
-
-           Skip passed fields that aren't hidden.
-           Skip passed names that don't exist.
-        """
-
         def hidden_fields(fields):
             for f in fields:
                 if isinstance(f, string_types):
@@ -95,9 +78,9 @@ class RegistrationForm(BaseModelForm):
 
 
 class PhotoUploadForm(Form):
-    name = StringField('first_name', [validators.length(min=2, max=100)])
-    file = FileField("Photo", [validators.required])
+    name = StringField('Name', [validators.length(min=2, max=100)])
+    file = FileField("Photo", [validators.required()])
 
 
 class ClientPhotoForm(Form):
-    file = FileField("Photo", [validators.required])
+    file = FileField("Photo", [validators.required()])
