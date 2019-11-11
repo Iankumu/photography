@@ -2,7 +2,7 @@
 {% block body %}
   <div class="container">
     <h1>NAME: {{ current_user.first_name }} {{ current_user.second_name }}</h1>
-    <h1>EMAIL:{{ current_user.email }} </h1>
-    <h3>@{{ current_user.username }}</h3>
+    <h1>EMAIL: {{ current_user.email }} </h1>
+    <h1>USERNAME: @{{ current_user.username }}</h1>
   </div>
 {% endblock %}

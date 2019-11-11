@@ -31,9 +31,10 @@
         {% for photographer in photographers %}
           <div class="col-md-4">
             <div class="card mb-4 shadow-sm">
-              <h3>{{ photographer.photographer_object.user.first_name }} {{ photographer.photographer_object.user.first_name }}</h3>
+              <h3>{{ photographer.photographer_object.user.first_name }} {{ photographer.photographer_object.user.second_name }}</h3>
               <h4>@{{ photographer.photographer_object.user.username }}</h4>
               <p>ranked {{ photographer.number_of_photos }} photos </p>
+              <a href="{{ url_for("photographer_profile", username = photographer.photographer_object.user.username) }}" class="btn btn-primary">View</a>
             </div>
           </div>
         {% endfor %}

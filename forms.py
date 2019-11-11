@@ -82,5 +82,10 @@ class PhotoUploadForm(Form):
     file = FileField("Photo", [validators.required()])
 
 
+class UploadPhotoUploadForm(Form):
+    name = StringField('Name', [validators.length(min=2, max=100)])
+    file = FileField("Photo")
+
+
 class ClientPhotoForm(Form):
     file = FileField("Photo", [validators.required()])

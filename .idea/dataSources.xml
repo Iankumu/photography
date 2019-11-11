@@ -7,7 +7,7 @@
       <imported>true</imported>
       <remarks>SQLite</remarks>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:\Users\Dan\PycharmProjects\photography\db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:C:\Users\User\Documents\Learn\Python\photography\db</jdbc-url>
       <driver-properties>
         <property name="enable_load_extension" value="true" />
       </driver-properties>

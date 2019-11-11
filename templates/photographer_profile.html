@@ -1,71 +1,44 @@
 {% extends 'layout.html' %}
 {% block body %}
-  <
-  <style>
-    .bd-placeholder-img {
-      font-size: 1.125rem;
-      text-anchor: middle;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-
-    .im {
-      max-height: 6cm;
-    }
-
-    @media (min-width: 768px) {
-      .bd-placeholder-img-lg {
-        font-size: 3.5rem;
-      }
-    }
-
-    .jumbotron {
-      justify-items: center;
-    }
-
-    .container {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-  </style>
-  {% if image_names==Null %}
-    <div class="jumbotron">
-      <h1>Welcome to your own portfolio</h1>
-      <p>To start off Let's upload your first image</p>
-      <a href="{{ url_for('client_upload') }}" class="btn btn-primary" type="submit" name="upload">
-        Upload Your First Image
-      </a>
-    </div>
-  {% else %}
-    <div class="main-div">
-      <main role="main">
-        <div class="album py-5 bg-light">
-          <div class="container">
-            <div class="row">
-              {% for row in image_names %}
-                <div class="col-md-4">
-                  <div class="card mb-4 shadow-sm">
-                    <img class="im" src="{{ url_for('static',filename=row) }}">
-                    <div class="card-body">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <div class="btn-group">
-                          <a href="{{ url_for('edit') }}" class="btn btn-sm btn-outline-secondary"
-                             name="Edit">
-                            Edit image
-                          </a>
-                        </div>
-                        <small class="text-muted"><h3>Posted on </h3>{{ date }}</small>
-                      </div>
+  <div class="container" xmlns:srcdata="http://www.w3.org/1999/xhtml">
+    {% if not photos %}
+      <div class="jumbotron text-center">
+        <h1 class="dash">{{ photographer.first_name }}'s Profile</h1>
+        <h2 class="home">
+          <small>Welcome {{ current_user.first_name }} to my profile</small>
+        </h2>
+        <p>I have no photos sorry</p>
+      </div>
+    {% else %}
+      <div class="jumbotron text-center">
+        <h1 class="dash">{{ photographer.first_name }}'s Profile</h1>
+        <h2 class="home">
+          <small>Welcome {{ current_user.first_name }} to my profile</small>
+        </h2>
+        <p>CONTACT ON EMAIL : {{ photographer.email }}</p>
+        <p>CONTACT ON PHONE : {{ photographer.phone_number }}</p>
+      </div>
+      <div class="album">
+        <h1> MY PHOTOS</h1>
+        <div class="container">
+          <div class="row">
+            {% for photo in photos %}
+              <div class="col-12 col-md-4">
+                <div class="card mb-4 shadow-sm">
+                  <img class="img-thumbnail" style="height: 200px"
+                       src="data:{{ photo.file_type }};base64,{{ photo.file|render_image }}"/>
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <p>{{ photo.name }}</p>
+                      <small class="text-muted"><h3>Posted on </h3>{{ photo.date_added }}</small>
                     </div>
                   </div>
                 </div>
-              {% endfor %}
-            </div>
+              </div>
+            {% endfor %}
           </div>
         </div>
-      </main>
-    </div>
-  {% endif %}
+      </div>
+      </div>
+    {% endif %}
 {% endblock %}

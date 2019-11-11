@@ -8,7 +8,7 @@ from flask_security import Security, login_required, SQLAlchemySessionUserDatast
 from comparison import image_comparison
 from config import Config
 from database import db_session
-from forms import RegistrationForm, PhotoUploadForm, ClientPhotoForm
+from forms import RegistrationForm, PhotoUploadForm, UploadPhotoUploadForm, ClientPhotoForm
 from models import User, Role, Photo, Photographer, CurrentPhoto
 from utils import photographer_required
 
@@ -88,7 +88,8 @@ def photographer_register():
 def dashboard():
     # get all the photos belonging to the photographer who is currently logged in
     photos = current_user.photographer.photos
-    return render_template('dashboard.html', photos=photos)
+    photolen = len(photos)
+    return render_template('dashboard.html', photos=photos, photolen=photolen)
 
 
 # Show the photographer profile page
@@ -96,10 +97,10 @@ def dashboard():
 @app.route('/photographer/profile/<username>')
 def photographer_profile(username):
     # get user object from username
-    user = User.query.filter_by(username=username).first()
+    photographer = User.query.filter_by(username=username).first()
     # get photos owned by the photographer
-    photos = Photo.query.filter_by(photographer_id=user.photographer.id)
-    return render_template('photographer_profile.html', user=user, photos=photos)
+    photos = Photo.query.filter_by(photographer_id=photographer.photographer.id)
+    return render_template('photographer_profile.html', photographer=photographer, photos=photos)
 
 
 @login_required
@@ -154,7 +155,21 @@ def client_upload():
                 # save to db
                 db_session().add(current_photo)
                 db_session().commit()
-
+            else:
+                # get image file from form
+                image_file = form.file.data
+                # get current photo
+                current_photo = current_user.current_photo
+                # update the file
+                current_photo.file = image_file.read()
+                # open the PIL
+                image = Image.open(image_file)
+                # get file type from header
+                file_type = image_file.headers.get("Content-Type")
+                # add image data to file
+                current_photo.add_image_data(*image.size, file_type)
+                # save changes to db
+                db_session().commit()
             # render the template
             flash("Upload Image  Successful", "success")
             return redirect("/find-photographer")
@@ -183,7 +198,6 @@ def find_photographer():
                 number_of_photos = ranked_photographers.get(photographer_id).get("number_of_photos")
                 # get the average of photographer
                 average = ranked_photographers.get(photographer_id).get("euclidean_average")
-                assert average
                 # get the new average  after new photo consideration
                 average = ((average * number_of_photos) + euclidean_distance) / (number_of_photos + 1)
                 # get the new number of photos
@@ -211,12 +225,40 @@ def find_photographer():
 @login_required
 @app.route('/edit/<photo_id>', methods=['POST', 'GET'])
 def edit(photo_id):
-    if request.method == "GET":
-        # show the edit photo page
-        return redirect('dashboard')
-    if request.method == "POST":
-        # save the edited images
-        pass
+    session_object = db_session()
+    # get the photo object
+    photo = Photo.query.get(photo_id)
+    # if request method is post
+    if request.method == 'POST':
+        form = UploadPhotoUploadForm(name=request.form.get("name"), file=request.files.get("file"))
+        if form.validate():
+            # get the photographer id from the user
+            # save the image and link to photographer
+            image_file = form.file.data
+            if photo.name != form.name.data:
+                # update the photo name
+                photo.name = form.name.data
+            if image_file is None:
+                # update the image file
+                photo.file = image_file.read()
+                # open the image
+                image = Image.open(image_file)
+
+                file_type = image_file.headers.get("Content-Type")
+                photo.add_image_data(*image.size, file_type)
+            # save photo to db
+            session_object.commit()
+            # success message
+            flash("Image Uploaded Successfully", "success")
+            return redirect(url_for('dashboard'))
+        else:
+            return render_template('photographer_edit_photo.html', form=form, photo=photo)
+
+    # if the request is any other than get
+    form = UploadPhotoUploadForm(name=photo.name,
+                                 file=photo.file
+                                 )
+    return render_template('photographer_edit_photo.html', form=form, photo=photo)
 
 
 # Server Startup
