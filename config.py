@@ -28,9 +28,9 @@ class Config(object):
     MAIL_SERVER = 'smtp.gmail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
-    MAIL_USERNAME = 'danielavexus@gmail.com'  # yor email
-    MAIL_PASSWORD = 'DanKingKaKa!'  # your email
-    MAIL_DEFAULT_SENDER = 'danielavexus@gmail.com'  # your password
+    MAIL_USERNAME = 'nadmgalia@gmail.com'  # yor email
+    MAIL_PASSWORD = 'Sens!tive1=!'  # your email
+    MAIL_DEFAULT_SENDER = 'nadmgalia@gmail.com'  # your email
     # config image format
     UPLOAD_FOLDER = UPLOAD_FOLDER
     CLIENT_FOLDER = CLIENT_FOLDER
